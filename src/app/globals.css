@@ -2,8 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background-color: #0f172a;
+  background-color: #07080d;
+  background-image:
+    radial-gradient(circle at 50% -10%, rgba(224, 32, 42, 0.16), transparent 55%),
+    radial-gradient(circle at 100% 0%, rgba(242, 177, 52, 0.06), transparent 40%);
+  background-attachment: fixed;
   color: #f8fafc;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 32, 42, 0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(224, 32, 42, 0.6);
 }
