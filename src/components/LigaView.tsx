@@ -182,11 +182,17 @@ export default function LigaView({
                     : 'bg-ink-800/50 border-ink-700/60 hover:border-brand/30'
                 }`}
               >
-                <span className="text-slate-200 font-medium truncate">{m.name1}</span>
-                <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2">
+                <span className="flex flex-col min-w-0">
+                  <span className="text-slate-200 font-medium truncate">{m.name1}</span>
+                  {m.avg1 > 0 && <span className="text-[11px] text-gold">śr. {m.avg1}</span>}
+                </span>
+                <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2 shrink-0">
                   {m.legs1} - {m.legs2}
                 </span>
-                <span className="text-slate-200 font-medium truncate text-right">{m.name2}</span>
+                <span className="flex flex-col min-w-0 items-end text-right">
+                  <span className="text-slate-200 font-medium truncate">{m.name2}</span>
+                  {m.avg2 > 0 && <span className="text-[11px] text-gold">śr. {m.avg2}</span>}
+                </span>
               </div>
             ))}
           </div>
