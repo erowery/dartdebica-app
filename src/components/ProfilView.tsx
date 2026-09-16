@@ -25,6 +25,11 @@ export default function ProfilView({
 }) {
   const winPercent = myStanding && myStanding.played > 0 ? (myStanding.won / myStanding.played) * 100 : 0;
 
+  // Średnia z każdego rozegranego meczu, w kolejności od pierwszego do ostatniego - do wykresu trendu
+  const averageTrend = myResults
+    .map((m) => (m.tpid1 === myTpid ? m.avg1 : m.avg2))
+    .filter((a) => a > 0);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center text-center py-4">
@@ -68,7 +73,6 @@ export default function ProfilView({
             <Stat label="180" value={myStats.t180} />
             <Stat label="Best leg" value={myStats.bestLeg ?? '-'} />
             <Stat label="High out" value={myStats.highOut ?? '-'} />
-            <Stat label="Mecze (W)" value={`${myStats.matches} (${myStats.matchesWon})`} />
           </div>
         ) : (
           <p className="text-sm text-slate-500 mb-3">Brak zapisanych statystyk.</p>
@@ -77,7 +81,7 @@ export default function ProfilView({
         {myStats && (myStats.t100 + myStats.t140 + myStats.t170 + myStats.t180 > 0) && (
           <div>
             <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">Rozkład rzutów punktowanych</p>
-            <MilestoneDonut
+            <MilestoneBarChart
               milestones={[
                 { label: '100+', value: myStats.t100, color: '#94a3b8' },
                 { label: '140+', value: myStats.t140, color: '#2dd6a7' },
@@ -93,6 +97,13 @@ export default function ProfilView({
           wynik całego lega), dlatego procentu skuteczności w double nie da się tu pokazać.
         </p>
       </div>
+
+      {averageTrend.length >= 2 && (
+        <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">Trend średniej w sezonie</p>
+          <AverageTrendChart values={averageTrend} />
+        </div>
+      )}
 
       <button
         onClick={onReset}
@@ -113,33 +124,72 @@ function Stat({ label, value, highlight }: { label: string; value: string | numb
   );
 }
 
-function MilestoneDonut({ milestones }: { milestones: { label: string; value: number; color: string }[] }) {
-  const total = milestones.reduce((sum, m) => sum + m.value, 0);
-  if (total === 0) return null;
-
-  let cumulative = 0;
-  const stops = milestones.map((m) => {
-    const start = (cumulative / total) * 360;
-    cumulative += m.value;
-    const end = (cumulative / total) * 360;
-    return `${m.color} ${start}deg ${end}deg`;
-  });
+/** Kompaktowy wykres słupkowy - liczba tuż nad słupkiem, etykieta tuż pod nim (blisko siebie) */
+function MilestoneBarChart({ milestones }: { milestones: { label: string; value: number; color: string }[] }) {
+  const max = Math.max(1, ...milestones.map((m) => m.value));
 
   return (
-    <div className="flex items-center gap-5">
-      <div className="relative w-28 h-28 rounded-full shrink-0" style={{ background: `conic-gradient(${stops.join(', ')})` }}>
-        <div className="absolute inset-3 rounded-full bg-ink-800 flex items-center justify-center">
-          <span className="text-lg font-extrabold text-white">{total}</span>
+    <div className="flex items-end justify-between gap-3 h-28">
+      {milestones.map((m) => (
+        <div key={m.label} className="flex-1 flex flex-col items-center justify-end h-full">
+          <span className="text-sm font-bold text-white mb-1">{m.value}</span>
+          <div
+            className="w-full max-w-[36px] rounded-t-md"
+            style={{
+              height: `${Math.max((m.value / max) * 100, m.value > 0 ? 6 : 2)}%`,
+              backgroundColor: m.color,
+            }}
+          />
+          <span className="text-[10px] uppercase tracking-wider text-slate-500 mt-1.5">{m.label}</span>
         </div>
+      ))}
+    </div>
+  );
+}
+
+/** Wykres liniowy średniej mecz po meczu - widać czy forma rośnie czy spada */
+function AverageTrendChart({ values }: { values: number[] }) {
+  const width = 300;
+  const height = 90;
+  const padding = 6;
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+
+  const coords = values.map((v, i) => {
+    const x = padding + (i / (values.length - 1)) * (width - padding * 2);
+    const y = height - padding - ((v - min) / range) * (height - padding * 2);
+    return { x, y };
+  });
+
+  const trendUp = values[values.length - 1] >= values[0];
+  const color = trendUp ? '#2dd6a7' : '#f87171';
+
+  const linePoints = coords.map((c) => `${c.x},${c.y}`).join(' ');
+  const areaPoints = `${padding},${height - padding} ${linePoints} ${width - padding},${height - padding}`;
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg" style={{ color }}>
+          {trendUp ? '▲' : '▼'}
+        </span>
+        <span className="text-sm text-slate-300">
+          Od <span className="font-bold text-white">{values[0].toFixed(1)}</span> do{' '}
+          <span className="font-bold text-white">{values[values.length - 1].toFixed(1)}</span>
+        </span>
       </div>
-      <div className="space-y-1.5 text-xs flex-1">
-        {milestones.map((m) => (
-          <div key={m.label} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: m.color }} />
-            <span className="text-slate-300 font-medium">{m.label}</span>
-            <span className="text-white font-bold ml-auto">{m.value}</span>
-          </div>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24" preserveAspectRatio="none">
+        <polygon points={areaPoints} fill={color} opacity={0.12} />
+        <polyline points={linePoints} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        {coords.map((c, i) => (
+          <circle key={i} cx={c.x} cy={c.y} r={2.5} fill={color} />
         ))}
+      </svg>
+      <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+        <span>Mecz 1</span>
+        <span>Mecz {values.length}</span>
       </div>
     </div>
   );

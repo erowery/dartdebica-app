@@ -48,18 +48,14 @@ export default function LeaguePositionCard({
       {myStanding ? (
         <>
           <div className="flex items-center gap-4 mb-4">
-            <div className="text-3xl font-extrabold text-gold">{myRank ? `#${myRank}` : '-'}</div>
-            <div className="text-sm text-slate-400">
-              <div>
-                Mecze: <span className="text-white font-semibold">{myStanding.played}</span>
-              </div>
-              <div>
-                W: <span className="text-emerald-400 font-semibold">{myStanding.won}</span>
-                {' · '}
-                R: <span className="text-slate-300 font-semibold">{myStanding.drawn}</span>
-                {' · '}
-                P: <span className="text-red-400 font-semibold">{myStanding.lost}</span>
-              </div>
+            <div className="text-4xl font-extrabold text-gold shrink-0 w-16 text-center">
+              {myRank ? `#${myRank}` : '-'}
+            </div>
+            <div className="grid grid-cols-4 gap-2 flex-1">
+              <MiniStat value={myStanding.played} label="Mecze" />
+              <MiniStat value={myStanding.won} label="Wygrane" color="text-emerald-400" />
+              <MiniStat value={myStanding.drawn} label="Remisy" color="text-slate-300" />
+              <MiniStat value={myStanding.lost} label="Przegrane" color="text-red-400" />
             </div>
           </div>
 
@@ -82,6 +78,15 @@ export default function LeaguePositionCard({
       ) : (
         <p className="text-sm text-slate-500">Jeszcze nie rozegrałeś meczu w tabeli.</p>
       )}
+    </div>
+  );
+}
+
+function MiniStat({ value, label, color = 'text-white' }: { value: number; label: string; color?: string }) {
+  return (
+    <div className="bg-ink-900/60 border border-ink-700/60 rounded-lg py-2 px-1 text-center">
+      <div className={`text-lg font-bold ${color}`}>{value}</div>
+      <div className="text-[9px] uppercase tracking-wider text-slate-500 mt-0.5 leading-tight">{label}</div>
     </div>
   );
 }

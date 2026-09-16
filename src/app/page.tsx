@@ -140,7 +140,7 @@ export default function HomePage() {
 
   const tournament = leagueData?.tournament || null;
   const livePairKeys = buildLivePairKeys(liveMatches);
-  const standingsResult = tournament ? computeLeagueStandings(tournament, livePairKeys) : null;
+  const standingsResult = tournament ? computeLeagueStandings(tournament) : null;
   const statsRows = tournament ? buildPlayerStats(tournament, stats) : [];
   const fixtures = tournament ? buildFixtures(tournament, schedule, livePairKeys) : [];
 
