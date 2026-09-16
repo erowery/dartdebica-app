@@ -5,7 +5,7 @@ export type ViewId = 'start' | 'liga' | 'moje' | 'live' | 'profil';
 const ITEMS: { id: ViewId; label: string; icon: string }[] = [
   { id: 'start', label: 'Start', icon: '🏠' },
   { id: 'liga', label: 'Liga', icon: '🏆' },
-  { id: 'moje', label: 'Mecze', icon: '🎯' },
+  { id: 'moje', label: 'Moje mecze', icon: '🎯' },
   { id: 'live', label: 'Live', icon: 'live' },
   { id: 'profil', label: 'Profil', icon: '👤' },
 ];

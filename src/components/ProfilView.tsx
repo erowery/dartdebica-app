@@ -4,6 +4,12 @@ import { StandingRow, MatchResultRow, PlayerStatRow } from '@/lib/standings';
 import LeaguePositionCard from '@/components/LeaguePositionCard';
 import RingProgress from '@/components/RingProgress';
 
+function initialsOf(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.trim().slice(0, 2).toUpperCase();
+}
+
 export default function ProfilView({
   playerName,
   leagueName,
@@ -33,9 +39,14 @@ export default function ProfilView({
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center text-center py-4">
-        <div className="w-16 h-16 rounded-full bg-gradient-to-b from-brand to-brand-dark flex items-center justify-center text-2xl font-extrabold text-white shadow-glow mb-3">
-          {playerName.trim().charAt(0).toUpperCase()}
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-b from-brand to-brand-dark shadow-glow flex items-center justify-center mb-2">
+          <svg viewBox="0 0 24 24" className="w-10 h-10">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="white" strokeWidth="1.4" opacity="0.9" />
+            <circle cx="12" cy="12" r="5.5" fill="none" stroke="white" strokeWidth="1.4" opacity="0.75" />
+            <circle cx="12" cy="12" r="2" fill="white" />
+          </svg>
         </div>
+        <span className="text-xs font-bold tracking-[0.2em] text-gold uppercase mb-2">{initialsOf(playerName)}</span>
         <h1 className="text-xl font-extrabold text-white">{playerName}</h1>
         <p className="text-slate-400 text-sm">{leagueName}</p>
       </div>
@@ -71,8 +82,9 @@ export default function ProfilView({
             <Stat label="140+" value={myStats.t140} />
             <Stat label="170+" value={myStats.t170} />
             <Stat label="180" value={myStats.t180} />
-            <Stat label="Best leg" value={myStats.bestLeg ?? '-'} />
+            <Stat label="100+ kończ." value={myStats.finishes100} />
             <Stat label="High out" value={myStats.highOut ?? '-'} />
+            <Stat label="Best leg" value={myStats.bestLeg ?? '-'} />
           </div>
         ) : (
           <p className="text-sm text-slate-500 mb-3">Brak zapisanych statystyk.</p>
@@ -150,8 +162,9 @@ function MilestoneBarChart({ milestones }: { milestones: { label: string; value:
 /** Wykres liniowy średniej mecz po meczu - widać czy forma rośnie czy spada */
 function AverageTrendChart({ values }: { values: number[] }) {
   const width = 300;
-  const height = 90;
+  const height = 100;
   const padding = 6;
+  const topPadding = 20;
 
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -159,7 +172,7 @@ function AverageTrendChart({ values }: { values: number[] }) {
 
   const coords = values.map((v, i) => {
     const x = padding + (i / (values.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((v - min) / range) * (height - padding * 2);
+    const y = height - padding - ((v - min) / range) * (height - padding - topPadding);
     return { x, y };
   });
 
@@ -180,11 +193,16 @@ function AverageTrendChart({ values }: { values: number[] }) {
           <span className="font-bold text-white">{values[values.length - 1].toFixed(1)}</span>
         </span>
       </div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-24" preserveAspectRatio="none">
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28" preserveAspectRatio="none">
         <polygon points={areaPoints} fill={color} opacity={0.12} />
         <polyline points={linePoints} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         {coords.map((c, i) => (
-          <circle key={i} cx={c.x} cy={c.y} r={2.5} fill={color} />
+          <g key={i}>
+            <text x={c.x} y={c.y - 8} textAnchor="middle" fontSize="9" fontWeight="bold" fill={color}>
+              {values[i].toFixed(1)}
+            </text>
+            <circle cx={c.x} cy={c.y} r={2.5} fill={color} />
+          </g>
         ))}
       </svg>
       <div className="flex justify-between text-[10px] text-slate-500 mt-1">

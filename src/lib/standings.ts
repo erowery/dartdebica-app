@@ -177,6 +177,7 @@ export interface PlayerStatRow {
   t140: number;
   t170: number;
   t180: number;
+  finishes100: number;
   bestLeg: number | null;
   highOut: number | null;
 }
@@ -202,6 +203,7 @@ export function buildPlayerStats(tournament: any, stats: Record<string, any> | n
       t140: s.ton40 ?? 0,
       t170: s.ton70 ?? 0,
       t180: s.ton80 ?? 0,
+      finishes100: s.highOutCount ?? 0,
       bestLeg: s.best ?? null,
       highOut: s.highOut || null,
     };

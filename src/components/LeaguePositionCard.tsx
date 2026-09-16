@@ -14,15 +14,9 @@ function formForPlayer(myTpid: string, results: MatchResultRow[]): ('W' | 'P' | 
 }
 
 const BADGE_STYLE: Record<'W' | 'P' | 'R', string> = {
-  W: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-  P: 'bg-red-500/15 text-red-400 border-red-500/30',
-  R: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
-};
-
-const BADGE_SYMBOL: Record<'W' | 'P' | 'R', string> = {
-  W: '▲',
-  P: '▼',
-  R: '●',
+  W: 'bg-emerald-500',
+  P: 'bg-red-500',
+  R: 'bg-amber-400',
 };
 
 export default function LeaguePositionCard({
@@ -66,10 +60,8 @@ export default function LeaguePositionCard({
                 {form.map((r, idx) => (
                   <span
                     key={idx}
-                    className={`w-7 h-7 flex items-center justify-center rounded-full border text-xs font-bold ${BADGE_STYLE[r]}`}
-                  >
-                    {BADGE_SYMBOL[r]}
-                  </span>
+                    className={`w-6 h-6 rounded-full ${BADGE_STYLE[r]}`}
+                  />
                 ))}
               </div>
             </div>

@@ -70,7 +70,8 @@ export default function LigaView({
   const [subTab, setSubTab] = useState<'table' | 'results' | 'players'>('table');
   const [query, setQuery] = useState('');
   const [selectedTpid, setSelectedTpid] = useState<string | null>(null);
-  const [compareKey, setCompareKey] = useState<string>('');
+  const [h2hA, setH2hA] = useState<string>('');
+  const [h2hB, setH2hB] = useState<string>('');
 
   const myLeaguePlayers: GlobalPlayer[] = useMemo(
     () => statsRows.map((p) => ({ ...p, leagueName })),
@@ -85,7 +86,8 @@ export default function LigaView({
   const filteredPlayers = sortedByAverage.filter((p) => normalize(p.name).includes(normalize(query)));
 
   const selectedPlayer = myLeaguePlayers.find((p) => p.tpid === selectedTpid) || null;
-  const comparePlayer = allPlayers.find((p) => playerKey(p) === compareKey) || null;
+  const h2hPlayerA = allPlayers.find((p) => playerKey(p) === h2hA) || null;
+  const h2hPlayerB = allPlayers.find((p) => playerKey(p) === h2hB) || null;
 
   // Grupowanie graczy do porównania wg ligi (żeby można było wybrać kogoś z dowolnej ligi)
   const playersByLeague = useMemo(() => {
@@ -212,7 +214,81 @@ export default function LigaView({
 
       {subTab === 'players' && (
         <div>
-          <h2 className="text-lg font-bold mb-4">Zawodnicy</h2>
+          {/* Dedykowana, widoczna od razu porównywarka H2H */}
+          <div className="p-4 bg-gradient-to-b from-brand/15 to-transparent border border-brand/30 rounded-2xl mb-6">
+            <p className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">🆚 Porównywarka graczy (H2H)</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <select
+                value={h2hA}
+                onChange={(e) => setH2hA(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-ink-900/70 border border-gold/40 text-white text-sm focus:outline-none focus:border-gold"
+              >
+                <option value="">Gracz A — wybierz...</option>
+                {(Object.entries(playersByLeague) as [string, GlobalPlayer[]][]).map(([lg, players]) => (
+                  <optgroup key={lg} label={lg}>
+                    {players
+                      .filter((p) => playerKey(p) !== h2hB)
+                      .map((p) => (
+                        <option key={playerKey(p)} value={playerKey(p)}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </optgroup>
+                ))}
+              </select>
+              <select
+                value={h2hB}
+                onChange={(e) => setH2hB(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-ink-900/70 border border-red-500/40 text-white text-sm focus:outline-none focus:border-red-500"
+              >
+                <option value="">Gracz B — wybierz...</option>
+                {(Object.entries(playersByLeague) as [string, GlobalPlayer[]][]).map(([lg, players]) => (
+                  <optgroup key={lg} label={lg}>
+                    {players
+                      .filter((p) => playerKey(p) !== h2hA)
+                      .map((p) => (
+                        <option key={playerKey(p)} value={playerKey(p)}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+
+            {h2hPlayerA && h2hPlayerB && (
+              <div className="mt-5 animate-fadeIn">
+                <div className="flex items-center justify-between mb-4 text-sm font-bold">
+                  <span className="text-gold">
+                    {h2hPlayerA.name} <span className="text-slate-500 font-normal">({h2hPlayerA.leagueName})</span>
+                  </span>
+                  <span className="text-slate-500">vs</span>
+                  <span className="text-red-400">
+                    {h2hPlayerB.name} <span className="text-slate-500 font-normal">({h2hPlayerB.leagueName})</span>
+                  </span>
+                </div>
+
+                <ComparisonRow label="Średnia" a={h2hPlayerA.average} b={h2hPlayerB.average} />
+                <ComparisonRow label="100+" a={h2hPlayerA.t100} b={h2hPlayerB.t100} />
+                <ComparisonRow label="140+" a={h2hPlayerA.t140} b={h2hPlayerB.t140} />
+                <ComparisonRow label="170+" a={h2hPlayerA.t170} b={h2hPlayerB.t170} />
+                <ComparisonRow label="180" a={h2hPlayerA.t180} b={h2hPlayerB.t180} />
+                <ComparisonRow label="100+ kończenie" a={h2hPlayerA.finishes100} b={h2hPlayerB.finishes100} />
+                <ComparisonRow label="High out" a={h2hPlayerA.highOut} b={h2hPlayerB.highOut} />
+
+                <div className="flex items-center justify-center gap-6 mt-3 text-xs text-slate-400">
+                  <span>
+                    Best leg: <span className="text-gold font-bold">{h2hPlayerA.bestLeg ?? '-'}</span>
+                  </span>
+                  <span>
+                    Best leg: <span className="text-red-400 font-bold">{h2hPlayerB.bestLeg ?? '-'}</span>
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <h2 className="text-lg font-bold mb-4">Wszyscy zawodnicy</h2>
 
           <input
             type="text"
@@ -232,18 +308,16 @@ export default function LigaView({
                   <th className="p-3 text-center">140+</th>
                   <th className="p-3 text-center">170+</th>
                   <th className="p-3 text-center">180</th>
-                  <th className="p-3 text-center">Best leg</th>
+                  <th className="p-3 text-center">100+ kończ.</th>
                   <th className="p-3 text-center">High out</th>
+                  <th className="p-3 text-center">Best leg</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-700/60">
                 {filteredPlayers.map((p) => (
                   <tr
                     key={p.tpid}
-                    onClick={() => {
-                      setSelectedTpid(p.tpid === selectedTpid ? null : p.tpid);
-                      setCompareKey('');
-                    }}
+                    onClick={() => setSelectedTpid(p.tpid === selectedTpid ? null : p.tpid)}
                     className={`cursor-pointer hover:bg-ink-800/40 transition-colors ${
                       p.tpid === selectedTpid ? 'bg-brand/10' : ''
                     } ${p.tpid === myTpid ? 'font-semibold' : ''}`}
@@ -259,8 +333,9 @@ export default function LigaView({
                     <td className="p-3 text-center">{p.t140}</td>
                     <td className="p-3 text-center">{p.t170}</td>
                     <td className="p-3 text-center">{p.t180}</td>
-                    <td className="p-3 text-center">{p.bestLeg ?? '-'}</td>
+                    <td className="p-3 text-center">{p.finishes100}</td>
                     <td className="p-3 text-center">{p.highOut ?? '-'}</td>
+                    <td className="p-3 text-center">{p.bestLeg ?? '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -274,85 +349,21 @@ export default function LigaView({
             <div className="p-4 bg-ink-800/60 border border-ink-700/60 rounded-2xl animate-fadeIn">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-white">{selectedPlayer.name}</h3>
-                <button
-                  onClick={() => {
-                    setSelectedTpid(null);
-                    setCompareKey('');
-                  }}
-                  className="text-slate-500 hover:text-slate-300 text-sm"
-                >
+                <button onClick={() => setSelectedTpid(null)} className="text-slate-500 hover:text-slate-300 text-sm">
                   ✕
                 </button>
               </div>
 
-              {!comparePlayer ? (
-                <>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4 text-center">
-                    <StatBadge label="Średnia" value={selectedPlayer.average?.toFixed(2) ?? '-'} />
-                    <StatBadge label="100+" value={selectedPlayer.t100} />
-                    <StatBadge label="140+" value={selectedPlayer.t140} />
-                    <StatBadge label="170+" value={selectedPlayer.t170} />
-                    <StatBadge label="180" value={selectedPlayer.t180} />
-                    <StatBadge label="Best leg" value={selectedPlayer.bestLeg ?? '-'} />
-                    <StatBadge label="High out" value={selectedPlayer.highOut ?? '-'} />
-                    <StatBadge label="Mecze (W)" value={`${selectedPlayer.matches} (${selectedPlayer.matchesWon})`} />
-                  </div>
-
-                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
-                    Porównaj z (dowolna liga):
-                  </p>
-                  <select
-                    value={compareKey}
-                    onChange={(e) => setCompareKey(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-ink-900/70 border border-ink-700 text-white text-sm focus:outline-none focus:border-brand/50"
-                  >
-                    <option value="">— wybierz zawodnika —</option>
-                    {(Object.entries(playersByLeague) as [string, GlobalPlayer[]][]).map(([lg, players]) => (
-                      <optgroup key={lg} label={lg}>
-                        {players
-                          .filter((p) => !(p.leagueName === leagueName && p.tpid === selectedPlayer.tpid))
-                          .map((p) => (
-                            <option key={playerKey(p)} value={playerKey(p)}>
-                              {p.name}
-                            </option>
-                          ))}
-                      </optgroup>
-                    ))}
-                  </select>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between mb-4 text-sm font-bold">
-                    <span className="text-gold">
-                      {selectedPlayer.name} <span className="text-slate-500 font-normal">({leagueName})</span>
-                    </span>
-                    <span className="text-slate-500">vs</span>
-                    <span className="text-red-400">
-                      {comparePlayer.name} <span className="text-slate-500 font-normal">({comparePlayer.leagueName})</span>
-                    </span>
-                  </div>
-
-                  <ComparisonRow label="Średnia" a={selectedPlayer.average} b={comparePlayer.average} />
-                  <ComparisonRow label="100+" a={selectedPlayer.t100} b={comparePlayer.t100} />
-                  <ComparisonRow label="140+" a={selectedPlayer.t140} b={comparePlayer.t140} />
-                  <ComparisonRow label="170+" a={selectedPlayer.t170} b={comparePlayer.t170} />
-                  <ComparisonRow label="180" a={selectedPlayer.t180} b={comparePlayer.t180} />
-                  <ComparisonRow label="High out" a={selectedPlayer.highOut} b={comparePlayer.highOut} />
-
-                  <div className="flex items-center justify-center gap-6 mt-3 text-xs text-slate-400">
-                    <span>
-                      Best leg: <span className="text-gold font-bold">{selectedPlayer.bestLeg ?? '-'}</span>
-                    </span>
-                    <span>
-                      Best leg: <span className="text-red-400 font-bold">{comparePlayer.bestLeg ?? '-'}</span>
-                    </span>
-                  </div>
-
-                  <button onClick={() => setCompareKey('')} className="mt-3 text-xs text-slate-500 hover:text-slate-300">
-                    ← Zmień porównanie
-                  </button>
-                </>
-              )}
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 text-center">
+                <StatBadge label="Średnia" value={selectedPlayer.average?.toFixed(2) ?? '-'} />
+                <StatBadge label="100+" value={selectedPlayer.t100} />
+                <StatBadge label="140+" value={selectedPlayer.t140} />
+                <StatBadge label="170+" value={selectedPlayer.t170} />
+                <StatBadge label="180" value={selectedPlayer.t180} />
+                <StatBadge label="100+ kończ." value={selectedPlayer.finishes100} />
+                <StatBadge label="High out" value={selectedPlayer.highOut ?? '-'} />
+                <StatBadge label="Best leg" value={selectedPlayer.bestLeg ?? '-'} />
+              </div>
             </div>
           )}
         </div>
