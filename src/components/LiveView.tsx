@@ -7,13 +7,11 @@ function initials(name: string) {
 }
 
 export default function LiveView({
-  liveMatches,
+  matches,
   myTpid,
-  leagueNakkaId,
 }: {
-  liveMatches: any[];
+  matches: any[]; // każdy otagowany polami _leagueName i _leagueNakkaId
   myTpid: string;
-  leagueNakkaId: string;
 }) {
   const parseMatchDetails = (match: any) => {
     const p1 = match.statsData?.[0] || {};
@@ -30,17 +28,19 @@ export default function LiveView({
     const tmid = match.tmid || match.mid;
     const nakkaMatchUrl = tmid
       ? `https://n01darts.com/n01/league/n01_view.html?tmid=${tmid}`
-      : `https://n01darts.com/n01/league/season.php?id=${leagueNakkaId}`;
+      : `https://n01darts.com/n01/league/season.php?id=${match._leagueNakkaId}`;
 
     return { p1Name, p2Name, p1Avg, p2Avg, leg1, leg2, isMine, nakkaMatchUrl };
   };
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-5">Mecze Na Żywo</h2>
-      {liveMatches.length > 0 ? (
+      <h2 className="text-xl font-bold mb-1">Mecze Na Żywo</h2>
+      <p className="text-slate-400 text-sm mb-5">Wszystkie ligi LSDD</p>
+
+      {matches.length > 0 ? (
         <div className="space-y-4">
-          {liveMatches.map((match: any, idx: number) => {
+          {matches.map((match: any, idx: number) => {
             const { p1Name, p2Name, p1Avg, p2Avg, leg1, leg2, isMine, nakkaMatchUrl } = parseMatchDetails(match);
 
             return (
@@ -52,19 +52,24 @@ export default function LiveView({
               >
                 <div className="absolute inset-0 bg-radial-fade pointer-events-none" />
 
-                <div className="relative flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-[11px] bg-red-500/15 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
-                    <span className="relative flex h-1.5 w-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                <div className="relative flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-[11px] bg-red-500/15 text-red-400 border border-red-500/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+                      </span>
+                      LIVE
                     </span>
-                    LIVE
-                  </span>
-                  {isMine && (
-                    <span className="text-[11px] bg-gold/15 text-gold border border-gold/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
-                      Twój mecz
+                    <span className="text-[11px] bg-ink-700/70 text-slate-300 border border-ink-600 px-2.5 py-1 rounded-full font-semibold">
+                      {match._leagueName}
                     </span>
-                  )}
+                    {isMine && (
+                      <span className="text-[11px] bg-gold/15 text-gold border border-gold/30 px-2.5 py-1 rounded-full font-bold uppercase tracking-wide">
+                        Twój mecz
+                      </span>
+                    )}
+                  </div>
                   <a
                     href={nakkaMatchUrl}
                     target="_blank"
@@ -105,7 +110,7 @@ export default function LiveView({
           })}
         </div>
       ) : (
-        <p className="text-slate-400 text-sm">Aktualnie żaden mecz tej ligi nie jest rozgrywany na żywo.</p>
+        <p className="text-slate-400 text-sm">Aktualnie żaden mecz nie jest rozgrywany na żywo w żadnej z lig LSDD.</p>
       )}
     </div>
   );

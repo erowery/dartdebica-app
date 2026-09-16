@@ -2,25 +2,32 @@
 
 import { useState, useEffect } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
-import { fetchLeagueData, fetchLiveMatches, fetchLeagueStats } from '@/lib/nakkaApi';
-import { computeLeagueStandings, buildPlayerStats } from '@/lib/standings';
+import { fetchLeagueData, fetchLiveMatches, fetchLeagueStats, fetchLeagueSchedule } from '@/lib/nakkaApi';
+import { computeLeagueStandings, buildPlayerStats, buildFixtures, buildLivePairKeys } from '@/lib/standings';
 import { loadWhoAmI, clearWhoAmI, WhoAmI } from '@/lib/whoami';
 import PlayerPicker from '@/components/PlayerPicker';
 import BottomNav, { ViewId } from '@/components/BottomNav';
 import StartView from '@/components/StartView';
-import LigaView from '@/components/LigaView';
+import LigaView, { GlobalPlayer } from '@/components/LigaView';
 import MojeMeczeView from '@/components/MojeMeczeView';
 import LiveView from '@/components/LiveView';
 import ProfilView from '@/components/ProfilView';
 
 export default function HomePage() {
-  const [whoami, setWhoami] = useState<WhoAmI | null | undefined>(undefined); // undefined = jeszcze nie sprawdzono
+  const [whoami, setWhoami] = useState<WhoAmI | null | undefined>(undefined);
   const [view, setView] = useState<ViewId>('start');
 
   const [leagueData, setLeagueData] = useState<any>(null);
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
   const [stats, setStats] = useState<Record<string, any> | null>(null);
+  const [schedule, setSchedule] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Zawodnicy ze WSZYSTKICH lig - do porównywarki (pobierani raz, nie co 5s)
+  const [allPlayers, setAllPlayers] = useState<GlobalPlayer[]>([]);
+
+  // Mecze na żywo ze WSZYSTKICH lig - do zakładki Live (odświeżane co 5s)
+  const [allLiveMatches, setAllLiveMatches] = useState<any[]>([]);
 
   useEffect(() => {
     setWhoami(loadWhoAmI());
@@ -28,6 +35,7 @@ export default function HomePage() {
 
   const activeLeague = whoami ? LEAGUES_CONFIG.find((l) => l.id === whoami.leagueId) : undefined;
 
+  // Dane bieżącej ligi - odświeżane co 5s
   useEffect(() => {
     if (!activeLeague) return;
     let isSubscribed = true;
@@ -35,10 +43,11 @@ export default function HomePage() {
     async function loadData(showLoadingIndicator = false) {
       if (showLoadingIndicator) setLoading(true);
 
-      const [data, live, leagueStats] = await Promise.all([
+      const [data, live, leagueStats, sched] = await Promise.all([
         fetchLeagueData(activeLeague!.nakkaId),
         fetchLiveMatches(activeLeague!.nakkaId),
         fetchLeagueStats(activeLeague!.nakkaId),
+        fetchLeagueSchedule(activeLeague!.nakkaId),
       ]);
 
       if (isSubscribed) {
@@ -46,6 +55,7 @@ export default function HomePage() {
         setLeagueData(data);
         setLiveMatches(activeOnly);
         setStats(leagueStats);
+        setSchedule(sched);
         setLoading(false);
       }
     }
@@ -59,12 +69,64 @@ export default function HomePage() {
     };
   }, [activeLeague]);
 
-  // Ekran ładowania początkowego (sprawdzanie localStorage)
+  // Zawodnicy wszystkich lig - jednorazowo, do porównywarki między ligami
+  useEffect(() => {
+    if (!whoami) return;
+    let isSubscribed = true;
+
+    async function loadAllPlayers() {
+      const results = await Promise.all(
+        LEAGUES_CONFIG.map(async (league) => {
+          const [data, leagueStats] = await Promise.all([
+            fetchLeagueData(league.nakkaId),
+            fetchLeagueStats(league.nakkaId),
+          ]);
+          const tournament = data?.tournament || null;
+          if (!tournament) return [];
+          return buildPlayerStats(tournament, leagueStats).map((p) => ({ ...p, leagueName: league.name }));
+        })
+      );
+      if (isSubscribed) setAllPlayers(results.flat());
+    }
+
+    loadAllPlayers();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [whoami]);
+
+  // Mecze na żywo ze wszystkich lig - dla zakładki Live, odświeżane co 5s
+  useEffect(() => {
+    if (!whoami) return;
+    let isSubscribed = true;
+
+    async function loadAllLive() {
+      const results = await Promise.all(
+        LEAGUES_CONFIG.map(async (league) => {
+          const live = await fetchLiveMatches(league.nakkaId);
+          const activeOnly = (live || []).filter((m: any) => m.endMatch !== 1 && m.endMatch !== true);
+          return activeOnly.map((m: any) => ({
+            ...m,
+            _leagueName: league.name,
+            _leagueNakkaId: league.nakkaId,
+          }));
+        })
+      );
+      if (isSubscribed) setAllLiveMatches(results.flat());
+    }
+
+    loadAllLive();
+    const intervalId = setInterval(loadAllLive, 5000);
+    return () => {
+      isSubscribed = false;
+      clearInterval(intervalId);
+    };
+  }, [whoami]);
+
   if (whoami === undefined) {
     return <main className="min-h-screen" />;
   }
 
-  // Brak wybranego gracza -> ekran "wybierz siebie"
   if (whoami === null || !activeLeague) {
     return (
       <PlayerPicker
@@ -77,8 +139,10 @@ export default function HomePage() {
   }
 
   const tournament = leagueData?.tournament || null;
-  const standingsResult = tournament ? computeLeagueStandings(tournament) : null;
+  const livePairKeys = buildLivePairKeys(liveMatches);
+  const standingsResult = tournament ? computeLeagueStandings(tournament, livePairKeys) : null;
   const statsRows = tournament ? buildPlayerStats(tournament, stats) : [];
+  const fixtures = tournament ? buildFixtures(tournament, schedule, livePairKeys) : [];
 
   const allStandingRows = standingsResult ? standingsResult.divisions.flat() : [];
   const myRankIndex = allStandingRows.findIndex((r) => r.tpid === whoami.tpid);
@@ -87,6 +151,10 @@ export default function HomePage() {
 
   const myResults = (standingsResult?.results || []).filter(
     (r) => r.tpid1 === whoami.tpid || r.tpid2 === whoami.tpid
+  );
+
+  const myPendingFixtures = fixtures.filter(
+    (f) => (f.tpid1 === whoami.tpid || f.tpid2 === whoami.tpid) && !f.played && !f.isLive
   );
 
   const liveMatchMine =
@@ -100,20 +168,16 @@ export default function HomePage() {
     setLeagueData(null);
     setLiveMatches([]);
     setStats(null);
+    setSchedule(null);
   }
 
   return (
     <main className="min-h-screen px-4 pb-28 pt-6 max-w-4xl mx-auto">
-      {/* Pasek górny */}
       <div className="flex items-center gap-3 mb-6">
-        <img
-          src="/logo.png"
-          alt="Dart Dębica"
-          className="w-10 h-10 rounded-full border border-brand/40 object-cover"
-        />
-        <div>
+        <img src="/logo.png" alt="Dart Dębica" className="w-10 h-10 rounded-full border border-brand/40 object-cover" />
+        <div className="min-w-0">
           <p className="text-sm font-bold text-white leading-tight">Dart Dębica</p>
-          <p className="text-[11px] text-slate-500 leading-tight">{activeLeague.name}</p>
+          <p className="text-[11px] text-slate-500 leading-tight truncate">{activeLeague.name} · {whoami.name}</p>
         </div>
       </div>
 
@@ -131,6 +195,7 @@ export default function HomePage() {
               leagueName={activeLeague.name}
               myStanding={myStanding}
               myRank={myRank}
+              myTpid={whoami.tpid}
               myResults={myResults}
               liveMatchMine={liveMatchMine}
               leagueUrl={leagueData?.url}
@@ -144,6 +209,7 @@ export default function HomePage() {
               leagueName={activeLeague.name}
               standingsResult={standingsResult}
               statsRows={statsRows}
+              allPlayers={allPlayers}
               myTpid={whoami.tpid}
               leagueUrl={leagueData?.url}
             />
@@ -153,14 +219,13 @@ export default function HomePage() {
             <MojeMeczeView
               playerName={whoami.name}
               myResults={myResults}
+              myPendingFixtures={myPendingFixtures}
               liveMatchMine={liveMatchMine}
-              onGoToLive={() => setView('live')}
+              leagueUrl={leagueData?.url}
             />
           )}
 
-          {view === 'live' && (
-            <LiveView liveMatches={liveMatches} myTpid={whoami.tpid} leagueNakkaId={activeLeague.nakkaId} />
-          )}
+          {view === 'live' && <LiveView matches={allLiveMatches} myTpid={whoami.tpid} />}
 
           {view === 'profil' && (
             <ProfilView
@@ -168,6 +233,8 @@ export default function HomePage() {
               leagueName={activeLeague.name}
               myStanding={myStanding}
               myRank={myRank}
+              myTpid={whoami.tpid}
+              myResults={myResults}
               myStats={myStats}
               onReset={handleReset}
             />
@@ -175,7 +242,7 @@ export default function HomePage() {
         </div>
       )}
 
-      <BottomNav active={view} onChange={setView} liveCount={liveMatches.length} />
+      <BottomNav active={view} onChange={setView} liveCount={allLiveMatches.length} />
     </main>
   );
 }

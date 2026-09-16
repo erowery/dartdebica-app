@@ -71,3 +71,20 @@ export async function fetchLeagueStats(tdid: string): Promise<Record<string, any
     return null;
   }
 }
+
+/**
+ * Plan gier (pary, które mają jeszcze zagrać w danej lidze) - używany do
+ * wyliczenia, które mecze gracz ma jeszcze przed sobą ("do rozegrania").
+ * Zwraca tablicę grup, każda z listą kart {p:[tpid,tpid], lsid}, albo null.
+ */
+export async function fetchLeagueSchedule(tdid: string): Promise<any[] | null> {
+  try {
+    const res = await fetchWithTimeout(`${NAKKA_BASE_URL}/league/schedule/get?tdid=${tdid}`);
+    if (!res || !res.ok) return null;
+    const data = await res.json();
+    if (!data || data.result !== 0) return null;
+    return data.schedule || null;
+  } catch {
+    return null;
+  }
+}

@@ -39,11 +39,31 @@ export function getEntryName(tournament: any, tpid: string): string {
   return entry?.name || tpid;
 }
 
+/** Klucz pary graczy niezależny od kolejności (do rozpoznawania tej samej pary) */
+export function pairKey(a: string, b: string): string {
+  return [a, b].sort().join('|');
+}
+
+/** Zbiór par graczy, których mecz trwa właśnie teraz na żywo */
+export function buildLivePairKeys(liveMatches: any[]): Set<string> {
+  const set = new Set<string>();
+  (liveMatches || []).forEach((m) => {
+    const tpids = (m.statsData || []).map((s: any) => s.tpid).filter(Boolean);
+    if (tpids.length >= 2) set.add(pairKey(tpids[0], tpids[1]));
+  });
+  return set;
+}
+
 /**
  * Liczy tabelę ligową i listę wyników na podstawie tournament.lg_table / lg_result.
  * Zwraca null, jeśli ta liga nie korzysta z formatu ligowego (np. tylko drabinka pucharowa).
+ * Mecze aktualnie trwające (excludePairKeys) są pomijane - Nakka aktualizuje ich wynik
+ * na żywo w trakcie gry, więc licząc ich do tabeli dostalibyśmy niepełne/mylące dane.
  */
-export function computeLeagueStandings(tournament: any): LeagueStandingsResult | null {
+export function computeLeagueStandings(
+  tournament: any,
+  excludePairKeys?: Set<string>
+): LeagueStandingsResult | null {
   if (!tournament || !Array.isArray(tournament.lg_table) || !tournament.lg_result) {
     return null;
   }
@@ -82,6 +102,8 @@ export function computeLeagueStandings(tournament: any): LeagueStandingsResult |
       if (tpids.length < 2) return;
 
       const [tpidA, tpidB] = tpids;
+      if (excludePairKeys?.has(pairKey(tpidA, tpidB))) return;
+
       const resA = matchObj[tpidA]?.[tpidB];
       const resB = matchObj[tpidB]?.[tpidA];
       if (!resA || !resB) return;
@@ -194,6 +216,7 @@ export interface FixtureRow {
   name1: string;
   name2: string;
   played: boolean;
+  isLive: boolean;
   legs1?: number;
   legs2?: number;
 }
@@ -202,9 +225,14 @@ export interface FixtureRow {
  * Łączy plan gier (league/schedule/get) z zapisanymi wynikami (lg_result), żeby wiedzieć
  * które pary już zagrały, a które mają to jeszcze przed sobą. Nakka nie przechowuje
  * konkretnej daty meczu, dopóki nie zostanie faktycznie rozegrany - więc "do rozegrania"
- * jest tu bez daty, nie ma zmyślonych terminów.
+ * jest tu bez daty, nie ma zmyślonych terminów. Pary, których mecz trwa właśnie teraz,
+ * są oznaczone jako isLive (pokazywane osobno, nie w "rozegrane" ani "do rozegrania").
  */
-export function buildFixtures(tournament: any, schedule: any[][] | null): FixtureRow[] {
+export function buildFixtures(
+  tournament: any,
+  schedule: any[][] | null,
+  livePairKeys?: Set<string>
+): FixtureRow[] {
   if (!schedule || !Array.isArray(schedule)) return [];
   const fixtures: FixtureRow[] = [];
 
@@ -214,13 +242,14 @@ export function buildFixtures(tournament: any, schedule: any[][] | null): Fixtur
       const [tpid1, tpid2] = card.p;
       if (!tpid1 || !tpid2 || tpid1 === 'empty' || tpid2 === 'empty') return;
 
+      const isLive = livePairKeys?.has(pairKey(tpid1, tpid2)) ?? false;
       const key = `${divIndex}_${card.lsid}`;
       const resultObj = tournament?.lg_result?.[key];
       let played = false;
       let legs1: number | undefined;
       let legs2: number | undefined;
 
-      if (resultObj) {
+      if (resultObj && !isLive) {
         const r1 = resultObj[tpid1]?.[tpid2];
         const r2 = resultObj[tpid2]?.[tpid1];
         if (r1 && r2) {
@@ -238,6 +267,7 @@ export function buildFixtures(tournament: any, schedule: any[][] | null): Fixtur
         name1: getEntryName(tournament, tpid1),
         name2: getEntryName(tournament, tpid2),
         played,
+        isLive,
         legs1,
         legs2,
       });

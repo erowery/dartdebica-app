@@ -3,6 +3,10 @@
 import { useState, useMemo } from 'react';
 import { LeagueStandingsResult, PlayerStatRow } from '@/lib/standings';
 
+export interface GlobalPlayer extends PlayerStatRow {
+  leagueName: string;
+}
+
 const MEDALS = ['🥇', '🥈', '🥉'];
 function rankBadge(idx: number) {
   return MEDALS[idx] || `${idx + 1}`;
@@ -15,48 +19,31 @@ function normalize(str: string) {
     .toLowerCase();
 }
 
-function ComparisonRow({
-  label,
-  a,
-  b,
-  higherIsBetter = true,
-  suffix = '',
-}: {
-  label: string;
-  a: number | null;
-  b: number | null;
-  higherIsBetter?: boolean;
-  suffix?: string;
-}) {
+function playerKey(p: GlobalPlayer) {
+  return `${p.leagueName}::${p.tpid}`;
+}
+
+/** Pasek proporcjonalny - cała szerokość to 100%, kolor dzielony wg udziału wartości a/b */
+function ComparisonRow({ label, a, b, suffix = '' }: { label: string; a: number | null; b: number | null; suffix?: string }) {
   const av = a ?? 0;
   const bv = b ?? 0;
-  const max = Math.max(av, bv, 1);
-  const aBetter = higherIsBetter ? av > bv : av < bv && av > 0;
-  const bBetter = higherIsBetter ? bv > av : bv < av && bv > 0;
+  const total = av + bv;
+  const pctA = total > 0 ? (av / total) * 100 : 50;
+  const pctB = 100 - pctA;
 
   return (
     <div className="mb-3">
       <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-1 text-center">{label}</p>
       <div className="flex items-center gap-2">
-        <span className={`w-14 text-right text-sm font-bold ${aBetter ? 'text-gold' : 'text-slate-300'}`}>
+        <span className="w-14 text-right text-sm font-bold text-gold">
           {a !== null ? a : '-'}
           {suffix}
         </span>
-        <div className="flex-1 flex gap-1 h-2.5">
-          <div className="flex-1 flex justify-end">
-            <div
-              className={`h-full rounded-l-full ${aBetter ? 'bg-gold' : 'bg-ink-700'}`}
-              style={{ width: `${(av / max) * 100}%` }}
-            />
-          </div>
-          <div className="flex-1 flex justify-start">
-            <div
-              className={`h-full rounded-r-full ${bBetter ? 'bg-brand' : 'bg-ink-700'}`}
-              style={{ width: `${(bv / max) * 100}%` }}
-            />
-          </div>
+        <div className="flex-1 h-2.5 rounded-full overflow-hidden flex bg-ink-900/60">
+          <div className="h-full bg-gold" style={{ width: `${pctA}%` }} />
+          <div className="h-full bg-red-500" style={{ width: `${pctB}%` }} />
         </div>
-        <span className={`w-14 text-left text-sm font-bold ${bBetter ? 'text-brand-light' : 'text-slate-300'}`}>
+        <span className="w-14 text-left text-sm font-bold text-red-400">
           {b !== null ? b : '-'}
           {suffix}
         </span>
@@ -69,33 +56,50 @@ export default function LigaView({
   leagueName,
   standingsResult,
   statsRows,
+  allPlayers,
   myTpid,
   leagueUrl,
 }: {
   leagueName: string;
   standingsResult: LeagueStandingsResult | null;
   statsRows: PlayerStatRow[];
+  allPlayers: GlobalPlayer[];
   myTpid: string;
   leagueUrl?: string;
 }) {
   const [subTab, setSubTab] = useState<'table' | 'results' | 'players'>('table');
-  const [showAllResults, setShowAllResults] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedTpid, setSelectedTpid] = useState<string | null>(null);
-  const [compareTpid, setCompareTpid] = useState<string | null>(null);
+  const [compareKey, setCompareKey] = useState<string>('');
+
+  const myLeaguePlayers: GlobalPlayer[] = useMemo(
+    () => statsRows.map((p) => ({ ...p, leagueName })),
+    [statsRows, leagueName]
+  );
 
   const sortedByAverage = useMemo(
-    () => [...statsRows].sort((a, b) => (b.average ?? -1) - (a.average ?? -1)),
-    [statsRows]
+    () => [...myLeaguePlayers].sort((a, b) => (b.average ?? -1) - (a.average ?? -1)),
+    [myLeaguePlayers]
   );
 
   const filteredPlayers = sortedByAverage.filter((p) => normalize(p.name).includes(normalize(query)));
 
-  const selectedPlayer = statsRows.find((p) => p.tpid === selectedTpid) || null;
-  const comparePlayer = statsRows.find((p) => p.tpid === compareTpid) || null;
+  const selectedPlayer = myLeaguePlayers.find((p) => p.tpid === selectedTpid) || null;
+  const comparePlayer = allPlayers.find((p) => playerKey(p) === compareKey) || null;
+
+  // Grupowanie graczy do porównania wg ligi (żeby można było wybrać kogoś z dowolnej ligi)
+  const playersByLeague = useMemo(() => {
+    const groups: Record<string, GlobalPlayer[]> = {};
+    allPlayers.forEach((p) => {
+      if (!groups[p.leagueName]) groups[p.leagueName] = [];
+      groups[p.leagueName].push(p);
+    });
+    Object.values(groups).forEach((list) => list.sort((a, b) => a.name.localeCompare(b.name)));
+    return groups;
+  }, [allPlayers]);
 
   const results = standingsResult?.results || [];
-  const visibleResults = showAllResults ? results.slice().reverse() : results.slice(-5).reverse();
+  const visibleResults = results.slice(-5).reverse();
 
   return (
     <div>
@@ -140,9 +144,7 @@ export default function LigaView({
                   {rows.map((row, idx) => (
                     <tr
                       key={row.tpid}
-                      className={`hover:bg-ink-800/40 transition-colors ${
-                        row.tpid === myTpid ? 'bg-brand/10' : ''
-                      }`}
+                      className={`hover:bg-ink-800/40 transition-colors ${row.tpid === myTpid ? 'bg-brand/10' : ''}`}
                     >
                       <td className="p-3 text-slate-500 font-medium">{rankBadge(idx)}</td>
                       <td className="p-3 font-semibold text-white">
@@ -156,11 +158,7 @@ export default function LigaView({
                       <td className="p-3 text-center text-slate-400">
                         {row.legsFor}:{row.legsAgainst}
                       </td>
-                      <td className="p-3 text-center">
-                        <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full bg-gold/15 text-gold font-bold border border-gold/30">
-                          {row.points}
-                        </span>
-                      </td>
+                      <td className="p-3 text-center font-bold text-white">{row.points}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -172,7 +170,7 @@ export default function LigaView({
 
       {subTab === 'results' && (
         <div>
-          <h2 className="text-lg font-bold mb-4">Rozegrane mecze</h2>
+          <h2 className="text-lg font-bold mb-4">Ostatnie wyniki ligowe</h2>
           {results.length === 0 && <p className="text-slate-400 text-sm">Brak rozegranych meczów.</p>}
           <div className="space-y-2">
             {visibleResults.map((m, idx) => (
@@ -193,15 +191,6 @@ export default function LigaView({
             ))}
           </div>
 
-          {!showAllResults && results.length > 5 && (
-            <button
-              onClick={() => setShowAllResults(true)}
-              className="mt-3 text-xs text-brand-light font-semibold hover:underline"
-            >
-              Pokaż wszystkie ({results.length}) →
-            </button>
-          )}
-
           {leagueUrl && (
             <a
               href={leagueUrl}
@@ -209,7 +198,7 @@ export default function LigaView({
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 mt-4 px-4 py-2.5 bg-gradient-to-b from-brand to-brand-dark hover:brightness-110 text-white rounded-xl text-xs font-semibold shadow-glow transition-all"
             >
-              Zobacz wszystkie wyniki w Nakka ↗
+              Zobacz więcej wyników w Nakka ↗
             </a>
           )}
         </div>
@@ -245,7 +234,10 @@ export default function LigaView({
                 {filteredPlayers.map((p) => (
                   <tr
                     key={p.tpid}
-                    onClick={() => setSelectedTpid(p.tpid === selectedTpid ? null : p.tpid)}
+                    onClick={() => {
+                      setSelectedTpid(p.tpid === selectedTpid ? null : p.tpid);
+                      setCompareKey('');
+                    }}
                     className={`cursor-pointer hover:bg-ink-800/40 transition-colors ${
                       p.tpid === selectedTpid ? 'bg-brand/10' : ''
                     } ${p.tpid === myTpid ? 'font-semibold' : ''}`}
@@ -276,7 +268,13 @@ export default function LigaView({
             <div className="p-4 bg-ink-800/60 border border-ink-700/60 rounded-2xl animate-fadeIn">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold text-white">{selectedPlayer.name}</h3>
-                <button onClick={() => { setSelectedTpid(null); setCompareTpid(null); }} className="text-slate-500 hover:text-slate-300 text-sm">
+                <button
+                  onClick={() => {
+                    setSelectedTpid(null);
+                    setCompareKey('');
+                  }}
+                  className="text-slate-500 hover:text-slate-300 text-sm"
+                >
                   ✕
                 </button>
               </div>
@@ -294,28 +292,38 @@ export default function LigaView({
                     <StatBadge label="Mecze (W)" value={`${selectedPlayer.matches} (${selectedPlayer.matchesWon})`} />
                   </div>
 
-                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Porównaj z:</p>
+                  <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
+                    Porównaj z (dowolna liga):
+                  </p>
                   <select
-                    onChange={(e) => setCompareTpid(e.target.value || null)}
-                    defaultValue=""
+                    value={compareKey}
+                    onChange={(e) => setCompareKey(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-ink-900/70 border border-ink-700 text-white text-sm focus:outline-none focus:border-brand/50"
                   >
                     <option value="">— wybierz zawodnika —</option>
-                    {statsRows
-                      .filter((p) => p.tpid !== selectedPlayer.tpid)
-                      .map((p) => (
-                        <option key={p.tpid} value={p.tpid}>
-                          {p.name}
-                        </option>
-                      ))}
+                    {(Object.entries(playersByLeague) as [string, GlobalPlayer[]][]).map(([lg, players]) => (
+                      <optgroup key={lg} label={lg}>
+                        {players
+                          .filter((p) => !(p.leagueName === leagueName && p.tpid === selectedPlayer.tpid))
+                          .map((p) => (
+                            <option key={playerKey(p)} value={playerKey(p)}>
+                              {p.name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </>
               ) : (
                 <>
                   <div className="flex items-center justify-between mb-4 text-sm font-bold">
-                    <span className="text-gold">{selectedPlayer.name}</span>
+                    <span className="text-gold">
+                      {selectedPlayer.name} <span className="text-slate-500 font-normal">({leagueName})</span>
+                    </span>
                     <span className="text-slate-500">vs</span>
-                    <span className="text-brand-light">{comparePlayer.name}</span>
+                    <span className="text-red-400">
+                      {comparePlayer.name} <span className="text-slate-500 font-normal">({comparePlayer.leagueName})</span>
+                    </span>
                   </div>
 
                   <ComparisonRow label="Średnia" a={selectedPlayer.average} b={comparePlayer.average} />
@@ -324,17 +332,17 @@ export default function LigaView({
                   <ComparisonRow label="170+" a={selectedPlayer.t170} b={comparePlayer.t170} />
                   <ComparisonRow label="180" a={selectedPlayer.t180} b={comparePlayer.t180} />
                   <ComparisonRow label="High out" a={selectedPlayer.highOut} b={comparePlayer.highOut} />
-                  <ComparisonRow
-                    label="Best leg (mniej = lepiej)"
-                    a={selectedPlayer.bestLeg}
-                    b={comparePlayer.bestLeg}
-                    higherIsBetter={false}
-                  />
 
-                  <button
-                    onClick={() => setCompareTpid(null)}
-                    className="mt-2 text-xs text-slate-500 hover:text-slate-300"
-                  >
+                  <div className="flex items-center justify-center gap-6 mt-3 text-xs text-slate-400">
+                    <span>
+                      Best leg: <span className="text-gold font-bold">{selectedPlayer.bestLeg ?? '-'}</span>
+                    </span>
+                    <span>
+                      Best leg: <span className="text-red-400 font-bold">{comparePlayer.bestLeg ?? '-'}</span>
+                    </span>
+                  </div>
+
+                  <button onClick={() => setCompareKey('')} className="mt-3 text-xs text-slate-500 hover:text-slate-300">
                     ← Zmień porównanie
                   </button>
                 </>

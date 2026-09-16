@@ -1,12 +1,14 @@
 'use client';
 
 import { StandingRow, MatchResultRow } from '@/lib/standings';
+import LeaguePositionCard from '@/components/LeaguePositionCard';
 
 export default function StartView({
   playerName,
   leagueName,
   myStanding,
   myRank,
+  myTpid,
   myResults,
   liveMatchMine,
   leagueUrl,
@@ -17,6 +19,7 @@ export default function StartView({
   leagueName: string;
   myStanding: StandingRow | null;
   myRank: number | null;
+  myTpid: string;
   myResults: MatchResultRow[];
   liveMatchMine: any | null;
   leagueUrl?: string;
@@ -71,39 +74,20 @@ export default function StartView({
       )}
 
       {/* Twoja liga */}
-      <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">
-        <p className="text-xs uppercase tracking-wider text-slate-500 mb-3">Twoja liga</p>
-        <p className="text-lg font-bold text-white mb-3">{leagueName}</p>
+      <LeaguePositionCard
+        leagueName={leagueName}
+        myStanding={myStanding}
+        myRank={myRank}
+        myTpid={myTpid}
+        myResults={myResults}
+      />
 
-        {myStanding ? (
-          <div className="flex items-center gap-4 mb-4">
-            <div className="text-3xl font-extrabold text-gold">
-              {myRank ? `#${myRank}` : '-'}
-            </div>
-            <div className="text-sm text-slate-400">
-              <div>
-                Mecze: <span className="text-white font-semibold">{myStanding.played}</span>
-              </div>
-              <div>
-                W: <span className="text-emerald-400 font-semibold">{myStanding.won}</span>
-                {' · '}
-                R: <span className="text-slate-300 font-semibold">{myStanding.drawn}</span>
-                {' · '}
-                P: <span className="text-red-400 font-semibold">{myStanding.lost}</span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-slate-500 mb-4">Jeszcze nie rozegrałeś meczu w tabeli.</p>
-        )}
-
-        <button
-          onClick={onGoToLiga}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-b from-brand to-brand-dark text-white text-sm font-semibold shadow-glow"
-        >
-          Zobacz tabelę
-        </button>
-      </div>
+      <button
+        onClick={onGoToLiga}
+        className="w-full py-2.5 rounded-xl bg-gradient-to-b from-brand to-brand-dark text-white text-sm font-semibold shadow-glow"
+      >
+        Zobacz tabelę
+      </button>
 
       {/* Twoje sprawy */}
       <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">
@@ -111,8 +95,8 @@ export default function StartView({
           ⚠️ Twoje sprawy
         </p>
         <p className="text-sm text-slate-300">
-          Terminarz i automatyczne przypomnienia o meczach pojawią się w kolejnym etapie rozwoju
-          aplikacji. Na razie sprawdzaj swoje wyniki w zakładce{' '}
+          Automatyczne przypomnienia o meczach pojawią się w kolejnym etapie rozwoju aplikacji. Na
+          razie sprawdzaj swoje mecze w zakładce{' '}
           <button onClick={onGoToMoje} className="text-brand-light font-semibold underline underline-offset-2">
             Moje Mecze
           </button>
