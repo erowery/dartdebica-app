@@ -55,7 +55,12 @@ export default function StartView({
 
       {/* Ostatni mecz (jeśli nie gra teraz) */}
       {!liveMatchMine && lastResult && (
-        <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">
+        <a
+          href={lastResult.nakkaMatchUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="block p-4 bg-ink-800/50 border border-ink-700/60 hover:border-brand/30 rounded-2xl transition-colors"
+        >
           <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Twój ostatni mecz</p>
           <div className="flex items-center justify-between text-sm">
             <span className="text-slate-200 font-medium truncate">{lastResult.name1}</span>
@@ -64,7 +69,7 @@ export default function StartView({
             </span>
             <span className="text-slate-200 font-medium truncate text-right">{lastResult.name2}</span>
           </div>
-        </div>
+        </a>
       )}
 
       {!liveMatchMine && !lastResult && (

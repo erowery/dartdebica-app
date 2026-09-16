@@ -41,9 +41,9 @@ function ComparisonRow({ label, a, b, suffix = '' }: { label: string; a: number 
         </span>
         <div className="flex-1 h-2.5 rounded-full overflow-hidden flex bg-ink-900/60">
           <div className="h-full bg-gold" style={{ width: `${pctA}%` }} />
-          <div className="h-full bg-red-500" style={{ width: `${pctB}%` }} />
+          <div className="h-full bg-brand" style={{ width: `${pctB}%` }} />
         </div>
-        <span className="w-14 text-left text-sm font-bold text-red-400">
+        <span className="w-14 text-left text-sm font-bold text-brand-light">
           {b !== null ? b : '-'}
           {suffix}
         </span>
@@ -176,8 +176,11 @@ export default function LigaView({
           {results.length === 0 && <p className="text-slate-400 text-sm">Brak rozegranych meczów.</p>}
           <div className="space-y-2">
             {visibleResults.map((m, idx) => (
-              <div
+              <a
                 key={idx}
+                href={m.nakkaMatchUrl}
+                target="_blank"
+                rel="noreferrer"
                 className={`flex items-center justify-between text-sm border rounded-xl px-4 py-2.5 transition-colors ${
                   m.tpid1 === myTpid || m.tpid2 === myTpid
                     ? 'bg-brand/10 border-brand/30'
@@ -195,7 +198,7 @@ export default function LigaView({
                   <span className="text-slate-200 font-medium truncate">{m.name2}</span>
                   {m.avg2 > 0 && <span className="text-[11px] text-gold">śr. {m.avg2}</span>}
                 </span>
-              </div>
+              </a>
             ))}
           </div>
 
@@ -239,7 +242,7 @@ export default function LigaView({
               <select
                 value={h2hB}
                 onChange={(e) => setH2hB(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl bg-ink-900/70 border border-red-500/40 text-white text-sm focus:outline-none focus:border-red-500"
+                className="w-full px-3 py-2.5 rounded-xl bg-ink-900/70 border border-brand/40 text-white text-sm focus:outline-none focus:border-brand"
               >
                 <option value="">Gracz B — wybierz...</option>
                 {(Object.entries(playersByLeague) as [string, GlobalPlayer[]][]).map(([lg, players]) => (
@@ -259,13 +262,9 @@ export default function LigaView({
             {h2hPlayerA && h2hPlayerB && (
               <div className="mt-5 animate-fadeIn">
                 <div className="flex items-center justify-between mb-4 text-sm font-bold">
-                  <span className="text-gold">
-                    {h2hPlayerA.name} <span className="text-slate-500 font-normal">({h2hPlayerA.leagueName})</span>
-                  </span>
+                  <span className="text-gold">{h2hPlayerA.name}</span>
                   <span className="text-slate-500">vs</span>
-                  <span className="text-red-400">
-                    {h2hPlayerB.name} <span className="text-slate-500 font-normal">({h2hPlayerB.leagueName})</span>
-                  </span>
+                  <span className="text-brand-light">{h2hPlayerB.name}</span>
                 </div>
 
                 <ComparisonRow label="Średnia" a={h2hPlayerA.average} b={h2hPlayerB.average} />
@@ -281,20 +280,21 @@ export default function LigaView({
                     Best leg: <span className="text-gold font-bold">{h2hPlayerA.bestLeg ?? '-'}</span>
                   </span>
                   <span>
-                    Best leg: <span className="text-red-400 font-bold">{h2hPlayerB.bestLeg ?? '-'}</span>
+                    Best leg: <span className="text-brand-light font-bold">{h2hPlayerB.bestLeg ?? '-'}</span>
                   </span>
                 </div>
               </div>
             )}
           </div>
 
-          <h2 className="text-lg font-bold mb-4">Wszyscy zawodnicy</h2>
+          <h2 className="text-lg font-bold mb-1">Zawodnicy - {leagueName}</h2>
+          <p className="text-xs text-slate-500 mb-3">Lista i wyszukiwarka dotyczą tylko tej ligi. Do porównania z inną ligą użyj porównywarki H2H powyżej.</p>
 
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Szukaj zawodnika..."
+            placeholder={`Szukaj zawodnika w ${leagueName}...`}
             className="w-full mb-3 px-4 py-2.5 rounded-xl bg-ink-800/60 border border-ink-700 text-white placeholder:text-slate-500 focus:outline-none focus:border-brand/50 text-sm"
           />
 

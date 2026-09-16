@@ -27,6 +27,7 @@ export interface MatchResultRow {
   legs2: number;
   avg1: number;
   avg2: number;
+  nakkaMatchUrl: string;
 }
 
 export interface LeagueStandingsResult {
@@ -111,6 +112,10 @@ export function computeLeagueStandings(
       const legsA = resA.r ?? 0;
       const legsB = resB.r ?? 0;
 
+      const lsid = key.slice(prefix.length);
+      const tmid = `${tournament.tdid}_lg_${divIndex}_${lsid}_${tpidA}_${tpidB}`;
+      const nakkaMatchUrl = `https://n01darts.com/n01/league/n01_view.html?tmid=${tmid}`;
+
       results.push({
         tpid1: tpidA,
         tpid2: tpidB,
@@ -120,6 +125,7 @@ export function computeLeagueStandings(
         legs2: legsB,
         avg1: resA.a ?? 0,
         avg2: resB.a ?? 0,
+        nakkaMatchUrl,
       });
 
       if (table[tpidA]) {

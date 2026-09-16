@@ -163,7 +163,7 @@ function MilestoneBarChart({ milestones }: { milestones: { label: string; value:
 function AverageTrendChart({ values }: { values: number[] }) {
   const width = 300;
   const height = 100;
-  const padding = 6;
+  const padding = 14;
   const topPadding = 20;
 
   const min = Math.min(...values);
@@ -196,14 +196,17 @@ function AverageTrendChart({ values }: { values: number[] }) {
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28" preserveAspectRatio="none">
         <polygon points={areaPoints} fill={color} opacity={0.12} />
         <polyline points={linePoints} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
-        {coords.map((c, i) => (
-          <g key={i}>
-            <text x={c.x} y={c.y - 8} textAnchor="middle" fontSize="9" fontWeight="bold" fill={color}>
-              {values[i].toFixed(1)}
-            </text>
-            <circle cx={c.x} cy={c.y} r={2.5} fill={color} />
-          </g>
-        ))}
+        {coords.map((c, i) => {
+          const anchor = i === 0 ? 'start' : i === coords.length - 1 ? 'end' : 'middle';
+          return (
+            <g key={i}>
+              <text x={c.x} y={c.y - 8} textAnchor={anchor} fontSize="10" fontWeight="bold" fill={color}>
+                {values[i].toFixed(1)}
+              </text>
+              <circle cx={c.x} cy={c.y} r={2.5} fill={color} />
+            </g>
+          );
+        })}
       </svg>
       <div className="flex justify-between text-[10px] text-slate-500 mt-1">
         <span>Mecz 1</span>
