@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { LeagueStandingsResult, PlayerStatRow } from '@/lib/standings';
+import { IconTrophy, IconClipboardCheck, IconUsers, IconVs } from '@/components/icons';
 
 export interface GlobalPlayer extends PlayerStatRow {
   leagueName: string;
@@ -107,17 +108,18 @@ export default function LigaView({
     <div>
       <div className="flex gap-1 mb-5 p-1 rounded-2xl bg-ink-800/60 border border-ink-700 text-xs sm:text-sm">
         {[
-          { id: 'table', label: '🏆 Tabela' },
-          { id: 'results', label: '📋 Wyniki' },
-          { id: 'players', label: '👥 Zawodnicy' },
+          { id: 'table', label: 'Tabela', Icon: IconTrophy },
+          { id: 'results', label: 'Wyniki', Icon: IconClipboardCheck },
+          { id: 'players', label: 'Zawodnicy', Icon: IconUsers },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setSubTab(t.id as any)}
-            className={`flex-1 py-2 px-2 rounded-xl font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-semibold transition-all ${
               subTab === t.id ? 'bg-gradient-to-b from-brand to-brand-dark text-white shadow-glow' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
+            <t.Icon className="w-4 h-4 shrink-0" />
             {t.label}
           </button>
         ))}
@@ -219,7 +221,9 @@ export default function LigaView({
         <div>
           {/* Dedykowana, widoczna od razu porównywarka H2H */}
           <div className="p-4 bg-gradient-to-b from-brand/15 to-transparent border border-brand/30 rounded-2xl mb-6">
-            <p className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">🆚 Porównywarka graczy (H2H)</p>
+            <p className="text-sm font-bold text-white mb-3 flex items-center gap-1.5">
+              <IconVs className="w-4 h-4 text-gold" /> Porównywarka graczy (H2H)
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select
                 value={h2hA}

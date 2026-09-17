@@ -1,13 +1,15 @@
 'use client';
 
+import { IconHome, IconTrophy, IconTarget, IconUser } from '@/components/icons';
+
 export type ViewId = 'start' | 'liga' | 'moje' | 'live' | 'profil';
 
-const ITEMS: { id: ViewId; label: string; icon: string }[] = [
-  { id: 'start', label: 'Start', icon: '🏠' },
-  { id: 'liga', label: 'Liga', icon: '🏆' },
-  { id: 'moje', label: 'Moje mecze', icon: '🎯' },
-  { id: 'live', label: 'Live', icon: 'live' },
-  { id: 'profil', label: 'Profil', icon: '👤' },
+const ITEMS: { id: ViewId; label: string }[] = [
+  { id: 'start', label: 'Start' },
+  { id: 'liga', label: 'Liga' },
+  { id: 'moje', label: 'Moje mecze' },
+  { id: 'live', label: 'Live' },
+  { id: 'profil', label: 'Profil' },
 ];
 
 export default function BottomNav({
@@ -32,8 +34,8 @@ export default function BottomNav({
                 activeItem ? 'text-brand-light' : 'text-slate-500 hover:text-slate-300'
               }`}
             >
-              {item.icon === 'live' ? (
-                <span className="relative flex h-4 w-4 items-center justify-center">
+              {item.id === 'live' ? (
+                <span className="relative flex h-[18px] w-[18px] items-center justify-center">
                   <span className="relative flex h-2 w-2">
                     {liveCount > 0 && (
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
@@ -46,7 +48,12 @@ export default function BottomNav({
                   </span>
                 </span>
               ) : (
-                <span className="text-base leading-none">{item.icon}</span>
+                <span className="w-[18px] h-[18px]">
+                  {item.id === 'start' && <IconHome className="w-full h-full" />}
+                  {item.id === 'liga' && <IconTrophy className="w-full h-full" />}
+                  {item.id === 'moje' && <IconTarget className="w-full h-full" />}
+                  {item.id === 'profil' && <IconUser className="w-full h-full" />}
+                </span>
               )}
               {item.label}
               {activeItem && <span className="absolute -top-px h-0.5 w-8 rounded-full bg-brand-light" />}

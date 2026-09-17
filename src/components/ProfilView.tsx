@@ -103,11 +103,6 @@ export default function ProfilView({
             />
           </div>
         )}
-
-        <p className="text-[11px] text-slate-600 mt-4 leading-relaxed">
-          Nakka nie udostępnia w publicznym API danych o celności rzutów kończących w double (tylko
-          wynik całego lega), dlatego procentu skuteczności w double nie da się tu pokazać.
-        </p>
       </div>
 
       {averageTrend.length >= 2 && (

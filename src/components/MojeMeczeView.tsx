@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MatchResultRow, FixtureRow } from '@/lib/standings';
+import { IconCheckCircle, IconClock } from '@/components/icons';
 
 export default function MojeMeczeView({
   playerName,
@@ -19,7 +20,19 @@ export default function MojeMeczeView({
 
   const doneOrdered = myResults.slice().reverse();
   const doneVisible = doneOrdered.slice(0, 3);
-  const pendingVisible = myPendingFixtures.slice(0, 3);
+
+  const today = new Date();
+  const pendingSorted = myPendingFixtures.slice().sort((a, b) => {
+    if (a.date && b.date) return a.date.getTime() - b.date.getTime();
+    if (a.date) return -1;
+    if (b.date) return 1;
+    return 0;
+  });
+  const pendingVisible = pendingSorted.slice(0, 3);
+
+  function formatDate(date: Date) {
+    return date.toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
+  }
 
   return (
     <div>
@@ -28,16 +41,17 @@ export default function MojeMeczeView({
 
       <div className="flex gap-1 mb-5 p-1 rounded-2xl bg-ink-800/60 border border-ink-700 text-xs sm:text-sm">
         {[
-          { id: 'done', label: '✅ Zakończone' },
-          { id: 'pending', label: '⏳ Do rozegrania' },
+          { id: 'done', label: 'Zakończone', Icon: IconCheckCircle },
+          { id: 'pending', label: 'Do rozegrania', Icon: IconClock },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setSubTab(t.id as any)}
-            className={`flex-1 py-2 px-2 rounded-xl font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-semibold transition-all ${
               subTab === t.id ? 'bg-gradient-to-b from-brand to-brand-dark text-white shadow-glow' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
+            <t.Icon className="w-4 h-4 shrink-0" />
             {t.label}
           </button>
         ))}
@@ -108,12 +122,24 @@ export default function MojeMeczeView({
             <div className="space-y-2">
               {pendingVisible.map((f, idx) => {
                 const opponent = f.name1 === playerName ? f.name2 : f.name1;
+                const isOverdue = f.date ? f.date.getTime() < today.setHours(0, 0, 0, 0) : false;
                 return (
                   <div key={idx} className="flex items-center justify-between text-sm bg-ink-800/50 border border-ink-700/60 rounded-xl px-4 py-3">
-                    <span className="text-white font-medium truncate">vs {opponent}</span>
-                    <span className="text-[11px] uppercase tracking-wider text-gold font-bold bg-gold/10 border border-gold/30 px-2.5 py-1 rounded-full">
-                      Do rozegrania
-                    </span>
+                    <div className="min-w-0">
+                      <span className="text-white font-medium truncate block">vs {opponent}</span>
+                      {f.date && (
+                        <span className="text-[11px] text-slate-500">{formatDate(f.date)}</span>
+                      )}
+                    </div>
+                    {isOverdue ? (
+                      <span className="text-[11px] uppercase tracking-wider text-red-400 font-bold bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-full shrink-0">
+                        Zaległy
+                      </span>
+                    ) : (
+                      <span className="text-[11px] uppercase tracking-wider text-gold font-bold bg-gold/10 border border-gold/30 px-2.5 py-1 rounded-full shrink-0">
+                        Do rozegrania
+                      </span>
+                    )}
                   </div>
                 );
               })}

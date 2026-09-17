@@ -227,14 +227,25 @@ export interface FixtureRow {
   isLive: boolean;
   legs1?: number;
   legs2?: number;
+  title: string;
+  date: Date | null;
+}
+
+/** Niektóre ligi wpisują datę meczu wprost w polu tytułu karty (np. "2026-09-16"). */
+function parseFixtureDate(title: string): Date | null {
+  if (!title) return null;
+  const match = title.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return null;
+  const [, y, m, d] = match;
+  const date = new Date(Number(y), Number(m) - 1, Number(d));
+  return isNaN(date.getTime()) ? null : date;
 }
 
 /**
  * Łączy plan gier (league/schedule/get) z zapisanymi wynikami (lg_result), żeby wiedzieć
- * które pary już zagrały, a które mają to jeszcze przed sobą. Nakka nie przechowuje
- * konkretnej daty meczu, dopóki nie zostanie faktycznie rozegrany - więc "do rozegrania"
- * jest tu bez daty, nie ma zmyślonych terminów. Pary, których mecz trwa właśnie teraz,
- * są oznaczone jako isLive (pokazywane osobno, nie w "rozegrane" ani "do rozegrania").
+ * które pary już zagrały, a które mają to jeszcze przed sobą. Jeśli organizator wpisał datę
+ * meczu w tytule karty (jak w panelu admina Nakka), odczytujemy ją i pokazujemy zawodnikowi.
+ * Pary, których mecz trwa właśnie teraz, są oznaczone jako isLive.
  */
 export function buildFixtures(
   tournament: any,
@@ -267,6 +278,8 @@ export function buildFixtures(
         }
       }
 
+      const title: string = card.t || '';
+
       fixtures.push({
         lsid: card.lsid,
         divIndex,
@@ -278,6 +291,8 @@ export function buildFixtures(
         isLive,
         legs1,
         legs2,
+        title,
+        date: parseFixtureDate(title),
       });
     });
   });

@@ -1,6 +1,7 @@
 'use client';
 
 import { StandingRow, MatchResultRow } from '@/lib/standings';
+import { IconWarning } from '@/components/icons';
 import LeaguePositionCard from '@/components/LeaguePositionCard';
 
 export default function StartView({
@@ -97,7 +98,7 @@ export default function StartView({
       {/* Twoje sprawy */}
       <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">
         <p className="text-xs uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
-          ⚠️ Twoje sprawy
+          <IconWarning className="w-3.5 h-3.5 text-gold" /> Twoje sprawy
         </p>
         <p className="text-sm text-slate-300">
           Automatyczne przypomnienia o meczach pojawią się w kolejnym etapie rozwoju aplikacji. Na
