@@ -231,14 +231,28 @@ export interface FixtureRow {
   date: Date | null;
 }
 
-/** Niektóre ligi wpisują datę meczu wprost w polu tytułu karty (np. "2026-09-16"). */
+/** Niektóre ligi wpisują datę meczu wprost w polu tytułu karty, np. "2026-09-16" albo "16.09.2026". */
 function parseFixtureDate(title: string): Date | null {
   if (!title) return null;
-  const match = title.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (!match) return null;
-  const [, y, m, d] = match;
-  const date = new Date(Number(y), Number(m) - 1, Number(d));
-  return isNaN(date.getTime()) ? null : date;
+
+  // Format RRRR-MM-DD (ISO)
+  const iso = title.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) {
+    const [, y, m, d] = iso;
+    const date = new Date(Number(y), Number(m) - 1, Number(d));
+    if (!isNaN(date.getTime())) return date;
+  }
+
+  // Format DD.MM.RRRR albo DD.MM.RR (polska notacja z kropkami)
+  const dotted = title.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);
+  if (dotted) {
+    const [, d, m, yRaw] = dotted;
+    const y = yRaw.length === 2 ? Number(`20${yRaw}`) : Number(yRaw);
+    const date = new Date(y, Number(m) - 1, Number(d));
+    if (!isNaN(date.getTime())) return date;
+  }
+
+  return null;
 }
 
 /**
