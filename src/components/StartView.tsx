@@ -1,8 +1,12 @@
 'use client';
 
-import { StandingRow, MatchResultRow } from '@/lib/standings';
+import { StandingRow, MatchResultRow, FixtureRow } from '@/lib/standings';
 import { IconWarning } from '@/components/icons';
 import LeaguePositionCard from '@/components/LeaguePositionCard';
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'long' });
+}
 
 export default function StartView({
   playerName,
@@ -11,6 +15,7 @@ export default function StartView({
   myRank,
   myTpid,
   myResults,
+  myPendingFixtures,
   liveMatchMine,
   leagueUrl,
   onGoToLiga,
@@ -22,12 +27,25 @@ export default function StartView({
   myRank: number | null;
   myTpid: string;
   myResults: MatchResultRow[];
+  myPendingFixtures: FixtureRow[];
   liveMatchMine: any | null;
   leagueUrl?: string;
   onGoToLiga: () => void;
   onGoToMoje: () => void;
 }) {
   const lastResult = myResults.length > 0 ? myResults[myResults.length - 1] : null;
+
+  const todayMidnight = new Date();
+  todayMidnight.setHours(0, 0, 0, 0);
+
+  const overdue = myPendingFixtures
+    .filter((f) => f.date && f.date.getTime() < todayMidnight.getTime())
+    .sort((a, b) => a.date!.getTime() - b.date!.getTime());
+
+  const upcoming = myPendingFixtures
+    .filter((f) => f.date && f.date.getTime() >= todayMidnight.getTime())
+    .sort((a, b) => a.date!.getTime() - b.date!.getTime());
+  const nextMatch = upcoming.length > 0 ? upcoming[0] : null;
 
   return (
     <div className="space-y-4">
@@ -52,6 +70,41 @@ export default function StartView({
           </span>
           <p className="relative text-white font-semibold">Twój mecz trwa właśnie teraz - sprawdź wynik →</p>
         </button>
+      )}
+
+      {/* Zaległe mecze - czerwona ramka, wszystkie na raz */}
+      {overdue.length > 0 && (
+        <div className="p-4 bg-red-500/10 border-2 border-red-500/50 rounded-2xl">
+          <p className="text-xs uppercase tracking-wider text-red-400 font-bold mb-3 flex items-center gap-1.5">
+            <IconWarning className="w-3.5 h-3.5" /> Zaległe mecze ({overdue.length})
+          </p>
+          <div className="space-y-2">
+            {overdue.map((f, idx) => {
+              const opponent = f.tpid1 === myTpid ? f.name2 : f.name1;
+              return (
+                <div key={idx} className="flex items-center justify-between text-sm bg-ink-900/40 rounded-xl px-3 py-2.5">
+                  <span className="text-white font-medium truncate">vs {opponent}</span>
+                  {f.date && <span className="text-sm font-semibold text-red-300 shrink-0 ml-2">{formatDate(f.date)}</span>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Następny zaplanowany mecz */}
+      {!liveMatchMine && nextMatch && (
+        <div className="p-4 bg-ink-800/50 border border-gold/30 rounded-2xl">
+          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Następny mecz</p>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-white font-medium truncate">
+              vs {nextMatch.tpid1 === myTpid ? nextMatch.name2 : nextMatch.name1}
+            </span>
+            {nextMatch.date && (
+              <span className="text-sm font-bold text-gold shrink-0 ml-2">{formatDate(nextMatch.date)}</span>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Ostatni mecz (jeśli nie gra teraz) */}
@@ -101,8 +154,8 @@ export default function StartView({
           <IconWarning className="w-3.5 h-3.5 text-gold" /> Twoje sprawy
         </p>
         <p className="text-sm text-slate-300">
-          Automatyczne przypomnienia o meczach pojawią się w kolejnym etapie rozwoju aplikacji. Na
-          razie sprawdzaj swoje mecze w zakładce{' '}
+          Automatyczne przypomnienia (powiadomienia) o meczach pojawią się w kolejnym etapie rozwoju
+          aplikacji. Na razie sprawdzaj swoje mecze w zakładce{' '}
           <button onClick={onGoToMoje} className="text-brand-light font-semibold underline underline-offset-2">
             Moje Mecze
           </button>

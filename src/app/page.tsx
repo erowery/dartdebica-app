@@ -197,6 +197,7 @@ export default function HomePage() {
               myRank={myRank}
               myTpid={whoami.tpid}
               myResults={myResults}
+              myPendingFixtures={myPendingFixtures}
               liveMatchMine={liveMatchMine}
               leagueUrl={leagueData?.url}
               onGoToLiga={() => setView('liga')}

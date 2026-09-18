@@ -128,7 +128,7 @@ export default function MojeMeczeView({
                     <div className="min-w-0">
                       <span className="text-white font-medium truncate block">vs {opponent}</span>
                       {f.date && (
-                        <span className="text-[11px] text-slate-500">{formatDate(f.date)}</span>
+                        <span className="text-sm font-semibold text-slate-300">{formatDate(f.date)}</span>
                       )}
                     </div>
                     {isOverdue ? (
