@@ -28,6 +28,7 @@ export interface MatchResultRow {
   avg1: number;
   avg2: number;
   nakkaMatchUrl: string;
+  hasDetail: boolean;
 }
 
 export interface LeagueStandingsResult {
@@ -116,6 +117,9 @@ export function computeLeagueStandings(
       const tmid = `${tournament.tdid}_lg_${divIndex}_${lsid}_${tpidA}_${tpidB}`;
       const nakkaMatchUrl = `https://n01darts.com/n01/league/n01_view.html?tmid=${tmid}`;
 
+      const avg1 = resA.a ?? 0;
+      const avg2 = resB.a ?? 0;
+
       results.push({
         tpid1: tpidA,
         tpid2: tpidB,
@@ -123,9 +127,12 @@ export function computeLeagueStandings(
         name2: getEntryName(tournament, tpidB),
         legs1: legsA,
         legs2: legsB,
-        avg1: resA.a ?? 0,
-        avg2: resB.a ?? 0,
+        avg1,
+        avg2,
         nakkaMatchUrl,
+        // Mecze wpisane ręcznie (bez rzutu po rzucie) nie mają średnich ani strony
+        // szczegółów meczu na Nakka - link prowadziłby donikąd, więc go nie pokazujemy.
+        hasDetail: avg1 > 0 || avg2 > 0,
       });
 
       if (table[tpidA]) {

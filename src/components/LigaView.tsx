@@ -178,31 +178,33 @@ export default function LigaView({
           <h2 className="text-lg font-bold mb-4">Ostatnie wyniki ligowe</h2>
           {results.length === 0 && <p className="text-slate-400 text-sm">Brak rozegranych meczów.</p>}
           <div className="space-y-2">
-            {visibleResults.map((m, idx) => (
-              <a
-                key={idx}
-                href={m.nakkaMatchUrl}
-                target="_blank"
-                rel="noreferrer"
-                className={`flex items-center justify-between text-sm border rounded-xl px-4 py-2.5 transition-colors ${
-                  m.tpid1 === myTpid || m.tpid2 === myTpid
-                    ? 'bg-brand/10 border-brand/30'
-                    : 'bg-ink-800/50 border-ink-700/60 hover:border-brand/30'
-                }`}
-              >
-                <span className="flex flex-col min-w-0">
-                  <span className="text-slate-200 font-medium truncate">{m.name1}</span>
-                  {m.avg1 > 0 && <span className="text-[11px] text-gold">śr. {m.avg1}</span>}
-                </span>
-                <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2 shrink-0">
-                  {m.legs1} - {m.legs2}
-                </span>
-                <span className="flex flex-col min-w-0 items-end text-right">
-                  <span className="text-slate-200 font-medium truncate">{m.name2}</span>
-                  {m.avg2 > 0 && <span className="text-[11px] text-gold">śr. {m.avg2}</span>}
-                </span>
-              </a>
-            ))}
+            {visibleResults.map((m, idx) => {
+              const Row: any = m.hasDetail ? 'a' : 'div';
+              const linkProps = m.hasDetail ? { href: m.nakkaMatchUrl, target: '_blank', rel: 'noreferrer' } : {};
+              return (
+                <Row
+                  key={idx}
+                  {...linkProps}
+                  className={`flex items-center justify-between text-sm border rounded-xl px-4 py-2.5 transition-colors ${
+                    m.tpid1 === myTpid || m.tpid2 === myTpid
+                      ? 'bg-brand/10 border-brand/30'
+                      : 'bg-ink-800/50 border-ink-700/60 hover:border-brand/30'
+                  }`}
+                >
+                  <span className="flex flex-col min-w-0">
+                    <span className="text-slate-200 font-medium truncate">{m.name1}</span>
+                    {m.avg1 > 0 && <span className="text-[11px] text-gold">śr. {m.avg1}</span>}
+                  </span>
+                  <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2 shrink-0">
+                    {m.legs1} - {m.legs2}
+                  </span>
+                  <span className="flex flex-col min-w-0 items-end text-right">
+                    <span className="text-slate-200 font-medium truncate">{m.name2}</span>
+                    {m.avg2 > 0 && <span className="text-[11px] text-gold">śr. {m.avg2}</span>}
+                  </span>
+                </Row>
+              );
+            })}
           </div>
 
           {leagueUrl && (

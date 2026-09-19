@@ -77,12 +77,13 @@ export default function MojeMeczeView({
                     ? 'bg-red-500/15 text-red-400 border-red-500/30'
                     : 'bg-slate-500/15 text-slate-300 border-slate-500/30';
 
+                const Row: any = m.hasDetail ? 'a' : 'div';
+                const linkProps = m.hasDetail ? { href: m.nakkaMatchUrl, target: '_blank', rel: 'noreferrer' } : {};
+
                 return (
-                  <a
+                  <Row
                     key={idx}
-                    href={m.nakkaMatchUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    {...linkProps}
                     className="flex items-center gap-3 text-sm bg-ink-800/50 border border-ink-700/60 hover:border-brand/30 rounded-xl px-4 py-3 transition-colors"
                   >
                     <span className={`shrink-0 w-7 h-7 flex items-center justify-center rounded-full border text-xs font-bold ${resultColor}`}>
@@ -95,7 +96,7 @@ export default function MojeMeczeView({
                     <span className="font-bold text-white whitespace-nowrap bg-ink-700/60 rounded-lg px-2.5 py-1">
                       {myLegs} - {theirLegs}
                     </span>
-                  </a>
+                  </Row>
                 );
               })}
             </div>

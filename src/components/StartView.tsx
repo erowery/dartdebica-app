@@ -109,23 +109,27 @@ export default function StartView({
       )}
 
       {/* Ostatni mecz (jeśli nie gra teraz) */}
-      {!liveMatchMine && lastResult && (
-        <a
-          href={lastResult.nakkaMatchUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="block p-4 bg-ink-800/50 border border-ink-700/60 hover:border-brand/30 rounded-2xl transition-colors"
-        >
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Twój ostatni mecz</p>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-200 font-medium truncate">{lastResult.name1}</span>
-            <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2">
-              {lastResult.legs1} - {lastResult.legs2}
-            </span>
-            <span className="text-slate-200 font-medium truncate text-right">{lastResult.name2}</span>
-          </div>
-        </a>
-      )}
+      {!liveMatchMine && lastResult && (() => {
+        const LastMatchTag: any = lastResult.hasDetail ? 'a' : 'div';
+        const linkProps = lastResult.hasDetail
+          ? { href: lastResult.nakkaMatchUrl, target: '_blank', rel: 'noreferrer' }
+          : {};
+        return (
+          <LastMatchTag
+            {...linkProps}
+            className="block p-4 bg-ink-800/50 border border-ink-700/60 hover:border-brand/30 rounded-2xl transition-colors"
+          >
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Twój ostatni mecz</p>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-200 font-medium truncate">{lastResult.name1}</span>
+              <span className="font-bold text-white px-3 whitespace-nowrap bg-ink-700/60 rounded-lg py-0.5 mx-2">
+                {lastResult.legs1} - {lastResult.legs2}
+              </span>
+              <span className="text-slate-200 font-medium truncate text-right">{lastResult.name2}</span>
+            </div>
+          </LastMatchTag>
+        );
+      })()}
 
       {!liveMatchMine && !lastResult && (
         <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl text-sm text-slate-400">
