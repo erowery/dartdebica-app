@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { StandingRow, MatchResultRow, PlayerStatRow } from '@/lib/standings';
 import LeaguePositionCard from '@/components/LeaguePositionCard';
 import RingProgress from '@/components/RingProgress';
 import MilestoneBarChart from '@/components/MilestoneBarChart';
+import { IconHelp } from '@/components/icons';
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -31,6 +33,7 @@ export default function ProfilView({
   onReset: () => void;
 }) {
   const winPercent = myStanding && myStanding.played > 0 ? (myStanding.won / myStanding.played) * 100 : 0;
+  const [showHelp, setShowHelp] = useState(false);
 
   // Średnia z każdego rozegranego meczu, w kolejności od pierwszego do ostatniego - do wykresu trendu
   const averageTrend = myResults
@@ -112,6 +115,39 @@ export default function ProfilView({
           <AverageTrendChart values={averageTrend} />
         </div>
       )}
+
+      <div>
+        <button
+          onClick={() => setShowHelp((v) => !v)}
+          className="w-full flex items-center justify-between py-2.5 px-4 rounded-xl bg-ink-800/60 border border-ink-700 text-slate-300 hover:text-white text-sm font-semibold transition-all mb-2"
+        >
+          <span className="flex items-center gap-2">
+            <IconHelp className="w-4 h-4" /> Pomoc / FAQ
+          </span>
+          <span className="text-slate-500">{showHelp ? '−' : '+'}</span>
+        </button>
+
+        {showHelp && (
+          <div className="p-4 bg-ink-800/40 border border-ink-700/60 rounded-2xl mb-2 space-y-3 text-sm text-slate-300 animate-fadeIn">
+            <div>
+              <p className="font-semibold text-white mb-0.5">Jak często aktualizują się dane?</p>
+              <p className="text-slate-400">Co 5 sekund, dopóki masz otwartą apkę na ekranie. Godzinę ostatniej aktualizacji widać w prawym górnym rogu.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Dlaczego niektóre mecze nie mają linku do Nakka?</p>
+              <p className="text-slate-400">Jeśli wynik został wpisany ręcznie (nie rozgrywany na żywo przez system), Nakka nie ma dla niego osobnej strony ze szczegółami - dlatego taki mecz nie jest klikalny.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Po co przycisk "Zmień gracza / ligę"?</p>
+              <p className="text-slate-400">Jeśli grasz w innej lidze, pomyliłeś się przy wyborze, albo z jednego telefonu korzysta kilka osób - tu wybierzesz siebie od nowa.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-0.5">Skąd biorą się statystyki i tabela?</p>
+              <p className="text-slate-400">Wszystko pochodzi bezpośrednio z systemu Nakka, na którym oficjalnie prowadzone są rozgrywki LSDD - apka tylko to ładniej pokazuje.</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       <button
         onClick={onReset}

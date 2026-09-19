@@ -22,6 +22,7 @@ export default function HomePage() {
   const [stats, setStats] = useState<Record<string, any> | null>(null);
   const [schedule, setSchedule] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Zawodnicy ze WSZYSTKICH lig - do porównywarki (pobierani raz, nie co 5s)
   const [allPlayers, setAllPlayers] = useState<GlobalPlayer[]>([]);
@@ -35,12 +36,13 @@ export default function HomePage() {
 
   const activeLeague = whoami ? LEAGUES_CONFIG.find((l) => l.id === whoami.leagueId) : undefined;
 
-  // Dane bieżącej ligi - odświeżane co 5s
+  // Dane bieżącej ligi - odświeżane co 5s (pauza, gdy karta jest w tle - oszczędza baterię i transfer)
   useEffect(() => {
     if (!activeLeague) return;
     let isSubscribed = true;
 
     async function loadData(showLoadingIndicator = false) {
+      if (document.visibilityState === 'hidden') return;
       if (showLoadingIndicator) setLoading(true);
 
       const [data, live, leagueStats, sched] = await Promise.all([
@@ -57,15 +59,22 @@ export default function HomePage() {
         setStats(leagueStats);
         setSchedule(sched);
         setLoading(false);
+        setLastUpdated(new Date());
       }
     }
 
     loadData(true);
     const intervalId = setInterval(() => loadData(false), 5000);
 
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') loadData(false);
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       isSubscribed = false;
       clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [activeLeague]);
 
@@ -95,12 +104,13 @@ export default function HomePage() {
     };
   }, [whoami]);
 
-  // Mecze na żywo ze wszystkich lig - dla zakładki Live, odświeżane co 5s
+  // Mecze na żywo ze wszystkich lig - dla zakładki Live, odświeżane co 5s (pauza w tle)
   useEffect(() => {
     if (!whoami) return;
     let isSubscribed = true;
 
     async function loadAllLive() {
+      if (document.visibilityState === 'hidden') return;
       const results = await Promise.all(
         LEAGUES_CONFIG.map(async (league) => {
           const live = await fetchLiveMatches(league.nakkaId);
@@ -117,9 +127,16 @@ export default function HomePage() {
 
     loadAllLive();
     const intervalId = setInterval(loadAllLive, 5000);
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') loadAllLive();
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       isSubscribed = false;
       clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [whoami]);
 
@@ -175,12 +192,18 @@ export default function HomePage() {
     <main className="min-h-screen px-4 pb-28 pt-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <img src="/logo.png" alt="Dart Dębica" className="w-10 h-10 rounded-full border border-brand/40 object-cover" />
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-extrabold text-white leading-tight tracking-wide">
             DART DĘBICA <span className="text-brand-light">ZONE</span>
           </p>
           <p className="text-[11px] text-slate-500 leading-tight truncate">{activeLeague.name} · {whoami.name}</p>
         </div>
+        {lastUpdated && (
+          <div className="shrink-0 flex items-center gap-1.5 text-[10px] text-slate-600">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
+            {lastUpdated.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+        )}
       </div>
 
       {loading ? (

@@ -110,6 +110,16 @@ export function IconWarning({ className }: IconProps) {
   );
 }
 
+export function IconHelp({ className }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.5 9.3a2.5 2.5 0 0 1 4.8 1c0 1.7-2.3 1.7-2.3 3.4" />
+      <circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconVs({ className }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} {...base}>
