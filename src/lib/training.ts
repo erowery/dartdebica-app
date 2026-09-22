@@ -1,6 +1,6 @@
 'use client';
 
-export type TierId = 'adept' | 'specjalista' | 'mistrz';
+export type TierId = 'adept' | 'debiutant' | 'specjalista' | 'ekspert' | 'mistrz';
 
 export interface PyramidLevel {
   poziom: 1 | 2 | 3;
@@ -9,9 +9,11 @@ export interface PyramidLevel {
 
 export interface TierDef {
   id: TierId;
-  title: string; // np. "Adept Darta"
-  subtitle: string; // np. "poziom początkujący"
-  color: string; // akcent koloru tego poziomu
+  title: string;
+  subtitle: string;
+  minAvg: number;
+  maxAvg: number;
+  color: string;
   levels: PyramidLevel[];
 }
 
@@ -19,90 +21,170 @@ export const PYRAMID_TIERS: TierDef[] = [
   {
     id: 'adept',
     title: 'Adept Darta',
-    subtitle: 'Poziom początkujący',
+    subtitle: 'Średnia: 35–45',
+    minAvg: 35,
+    maxAvg: 45,
     color: '#22c55e',
     levels: [
       {
         poziom: 1,
         challenges: [
-          'Traf 5 razy w jeden z wybranych sektorów 20 lub 19',
-          'Traf 3 razy w jeden z sektorów D16 lub D20',
-          'Rzuć 3 razy w środek czerwony lub zielony',
-          'Rzuć 10 razy w sektor 18',
-          'Wykonaj checkout 70 w 3 lotkach',
+          'Ostrzał S20/S19: Traf łącznie 20 razy w duży sektor 20 lub 19',
+          'Praca na tarczy: Traf łącznie 15 razy w duży sektor 18',
+          'Środek: Traf łącznie 4 razy w dowolny środek (zielony lub czerwony Bull)',
+          'Rozgrzewka na podwójnych: Traf łącznie 3 razy w D20 lub D16 (dowolne podejścia)',
+          'Niski checkout: Wykonaj checkout 20 (np. S10 + D5 lub D10) w max 3 lotkach',
         ],
       },
       {
         poziom: 2,
         challenges: [
-          'Rzuć 3 razy w jedną z wybranych potrójnych 20 lub 19',
-          'Wykonaj checkout 50 w 2 lotkach',
-          'Traf 3 razy pod rząd w jedną z wybranych D20 lub D16',
+          'Pojedyncza seria: Traf 3 razy w jednym podejściu (3 lotki) w sektor 20 lub 19 - powtórz to 2 razy w ciągu 10 minut',
+          'Precyzja dubli: Traf 2 razy pod rząd w wybrany podwójny sektor (D20 lub D16)',
+          'Średni checkout: Wykonaj checkout 32 lub 40 w max 3 lotkach',
         ],
       },
       {
         poziom: 3,
-        challenges: ['Wykonaj checkout 100'],
+        challenges: [
+          'Końcowy Test: Wykonaj checkout 50 (np. S10 + D20) w max 3 lotkach LUB rzuć minimum 60 punktów w jednym podejściu (3 lotki)',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'debiutant',
+    title: 'Debiutant Darta',
+    subtitle: 'Średnia: 45–55',
+    minAvg: 45,
+    maxAvg: 55,
+    color: '#84cc16',
+    levels: [
+      {
+        poziom: 1,
+        challenges: [
+          'Główny sektor: Traf łącznie 30 razy w sektor 20 lub 19',
+          'Dolne sektory: Traf łącznie 20 razy w sektor 18 lub 19',
+          'Centrum: Traf łącznie 6 razy w dowolny środek (Bull / Red Bull)',
+          'Trening dubli: Traf łącznie 5 razy w D20, D16 lub D8',
+          'Prosty checkout: Wykonaj checkout 36-40 w max 3 lotkach - zrób to 2 razy w trakcie 10 minut',
+        ],
+      },
+      {
+        poziom: 2,
+        challenges: [
+          'Kompaktowe podejście: Rzuć 3 lotki w sektor 20 lub 19 w jednym podejściu - wykonaj to 3 razy w ciągu 10 minut',
+          'Seria w double: Traf 2 razy pod rząd w ten sam podwójny sektor (np. 2x D20)',
+          'Wyższy checkout: Wykonaj checkout 50-60 w max 3 lotkach',
+        ],
+      },
+      {
+        poziom: 3,
+        challenges: [
+          'Końcowy Test: Wykonaj checkout 70 (np. T10 + D20 lub S10 + T20 + D0 / S20 + S10 + D20) w max 3 lotkach',
+        ],
       },
     ],
   },
   {
     id: 'specjalista',
-    title: 'Darterski Specjalista',
-    subtitle: 'Poziom średniozaawansowany',
+    title: 'Specjalista Darta',
+    subtitle: 'Średnia: 55–65',
+    minAvg: 55,
+    maxAvg: 65,
     color: '#06b6d4',
     levels: [
       {
         poziom: 1,
         challenges: [
-          'Traf 10 razy w jeden z wybranych sektorów 20 lub 19',
-          'Traf 5 razy w D16',
-          'Traf 5 razy w D20',
-          'Rzuć 5 razy w środek czerwony lub zielony',
-          'Traf 3 razy pod rząd w wybrany podwójny sektor',
+          'Ostrzał S20: Traf łącznie 40 razy w sektor 20',
+          'Główne duble: Traf łącznie 10 razy w D20 lub D16',
+          'Presja środka: Traf łącznie 8 razy w dowolny środek (Bull / Red Bull)',
+          'Średnie zamknięcia: Wykonaj 2 różne checkouty z zakresu 41-60',
+          'Scoring: Rzuć 60+ punktów w jednym podejściu 4 razy w trakcie 10 minut',
         ],
       },
       {
         poziom: 2,
         challenges: [
-          'Wykonaj checkout 70 w 3 lotkach',
-          'Traf 10 razy w jeden z wybranych D16 lub D20',
-          'Wykonaj checkout 121 w 3 lotkach',
+          'Czysta seria w dubel: Traf 3 razy pod rząd w wybrany podwójny sektor (np. 3x D20 lub 3x D16)',
+          'Wejście w potrójne: Traf 2 razy w potrójny sektor (T20 lub T19) w jednym podejściu (3 lotki)',
+          'Trudniejszy checkout: Wykonaj checkout 71-85 w max 3 lotkach',
         ],
       },
       {
         poziom: 3,
-        challenges: ['Rzuć 180 pkt w 3 lotkach'],
+        challenges: [
+          'Końcowy Test: Wykonaj checkout 100 w max 3 lotkach LUB rzuć 100+ punktów w jednym podejściu ORAZ zrób checkout 80+ w tej samej 10-minutowej sesji',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'ekspert',
+    title: 'Ekspert Darta',
+    subtitle: 'Średnia: 65–75',
+    minAvg: 65,
+    maxAvg: 75,
+    color: '#3b82f6',
+    levels: [
+      {
+        poziom: 1,
+        challenges: [
+          'Ostrzał tarczy: Traf łącznie 45 razy w sektor 20',
+          'Równowaga dubli: Traf łącznie 8 razy w D20 ORAZ 8 razy w D16',
+          'Środek: Traf łącznie 10 razy w środek (w tym minimum 3 razy w Red Bulla)',
+          'Szybkie zamykanie: Wykonaj 3 różne checkouty z zakresu 61-80 w max 3 lotkach',
+          'Mocny scoring: Rzuć 80+ punktów w jednym podejściu 5 razy w ciągu 10 minut',
+        ],
+      },
+      {
+        poziom: 2,
+        challenges: [
+          'Seryjny dubel: Traf 4 razy pod rząd w wybrany podwójny sektor (np. 4x D20 lub 4x D16)',
+          'Atak na potrójne: Rzuć wynik 140+ punktów (lub 180) w jednym podejściu',
+          'Wysoki checkout: Wykonaj checkout 86-105 w max 3 lotkach',
+        ],
+      },
+      {
+        poziom: 3,
+        challenges: [
+          'Końcowy Test: Wykonaj checkout 121 w max 3 lotkach LUB ustrzel 180 (3x T20) w trakcie trwania 10-minutowej sesji',
+        ],
       },
     ],
   },
   {
     id: 'mistrz',
-    title: 'Darterski Mistrz',
-    subtitle: 'Poziom zaawansowany',
+    title: 'Mistrz Darta',
+    subtitle: 'Średnia: 75+',
+    minAvg: 75,
+    maxAvg: 999,
     color: '#eab308',
     levels: [
       {
         poziom: 1,
         challenges: [
-          'Traf 20 razy w sektor 20 pod rząd',
-          'Traf 5 razy pod rząd w D16',
-          'Traf 5 razy pod rząd w D20',
-          'Traf 3 razy w 3 lotkach sekwencję doubli D20, D10, D5 lub D16, D8, D4',
-          'Rzuć 5 razy minimum 140 pkt w 3 lotkach',
+          'Maksymalny ostrzał: Traf łącznie 50 razy w sektor 20',
+          'Precyzyjne duble: Traf łącznie 10 razy w D20 ORAZ 10 razy w D16',
+          'Potrójne w serii: Traf 3 razy pod rząd w potrójny sektor (Treble) w jednym podejściu (np. T20-T20-T20 lub mix T20/T19)',
+          'Czyste centrum: Traf 3 razy pod rząd w środek (Bull/Red Bull) w jednym podejściu (3 lotki)',
+          'Seryjne zamknięcia: Wykonaj 3 checkouty powyżej 80 pkt w max 3 lotkach',
         ],
       },
       {
         poziom: 2,
         challenges: [
-          'Wykonaj 3 razy checkout 100 w 3 lotkach',
-          'Traf 6 razy pod rząd dowolny podwójny sektor',
-          'Wykonaj 2 razy pod rząd w 3 lotkach checkout 116',
+          'Żelazny dubel: Traf 5 razy pod rząd w ten sam podwójny sektor (np. D20-D20-D20-D20-D20)',
+          'Ciężki scoring: Rzuć dwukrotnie wynik 140+ (lub jeden raz 180) w ciągu jednej 10-minutowej sesji',
+          'Trudne zamknięcie: Wykonaj checkout 116-130 w max 3 lotkach',
         ],
       },
       {
         poziom: 3,
-        challenges: ['Wykonaj checkout 170'],
+        challenges: [
+          'Końcowy Test: Ustrzel 180 (3x T20) ORAZ wykonaj checkout 100+ w tej samej 10-minutowej sesji (LUB wykonaj pojedynczy checkout 131+ / klasyczny Big Fish 170)',
+        ],
       },
     ],
   },
@@ -112,9 +194,8 @@ export const CHALLENGE_MINUTES = 10;
 
 export function suggestTierId(average: number | null | undefined): TierId {
   if (!average || average <= 0) return 'adept';
-  if (average < 55) return 'adept';
-  if (average < 80) return 'specjalista';
-  return 'mistrz';
+  const found = PYRAMID_TIERS.find((t) => average >= t.minAvg && average < t.maxAvg);
+  return found?.id ?? 'mistrz';
 }
 
 export interface PyramidProgress {

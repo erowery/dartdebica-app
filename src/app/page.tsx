@@ -11,7 +11,7 @@ import StartView from '@/components/StartView';
 import LigaView, { GlobalPlayer } from '@/components/LigaView';
 import MojeMeczeView from '@/components/MojeMeczeView';
 import LiveView from '@/components/LiveView';
-import TreningView from '@/components/TreningView';
+import TreningHub from '@/components/TreningHub';
 import ProfilView from '@/components/ProfilView';
 
 export default function HomePage() {
@@ -254,7 +254,7 @@ export default function HomePage() {
 
           {view === 'live' && <LiveView matches={allLiveMatches} myTpid={whoami.tpid} />}
 
-          {view === 'trening' && <TreningView myTpid={whoami.tpid} average={myStats?.average ?? null} />}
+          {view === 'trening' && <TreningHub myTpid={whoami.tpid} average={myStats?.average ?? null} />}
 
           {view === 'profil' && (
             <ProfilView
