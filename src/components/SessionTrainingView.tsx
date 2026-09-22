@@ -23,6 +23,7 @@ function todayStr() {
 
 export default function SessionTrainingView({ type, myTpid }: { type: SessionType; myTpid: string }) {
   const [totalMinutes, setTotalMinutes] = useState<SessionMinutes | null>(null);
+  const [testMode, setTestMode] = useState(false);
   const [index, setIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [running, setRunning] = useState(false);
@@ -89,7 +90,7 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
 
   function startExercise() {
     if (!current) return;
-    setSecondsLeft(current.minutes * 60);
+    setSecondsLeft(testMode ? 60 : current.minutes * 60);
     setRunning(true);
     setWaitingReady(false);
   }
@@ -138,7 +139,7 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
         <h2 className="text-xl font-bold mb-1">{label}</h2>
         <p className="text-slate-400 text-sm mb-5">Wybierz, ile czasu chcesz przeznaczyć na dzisiejszy trening</p>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-4">
           {[75, 115].map((m) => (
             <button
               key={m}
@@ -150,6 +151,17 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
             </button>
           ))}
         </div>
+
+        <button
+          onClick={() => setTestMode((v) => !v)}
+          className={`w-full mb-6 py-2 rounded-xl text-xs font-semibold border transition-all ${
+            testMode
+              ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+              : 'bg-ink-800/40 border-ink-700 text-slate-500 hover:text-slate-300'
+          }`}
+        >
+          🧪 Tryb testowy (1 min na ćwiczenie) - {testMode ? 'włączony' : 'wyłączony'}
+        </button>
 
         {recentLog.length > 0 && (
           <div>
