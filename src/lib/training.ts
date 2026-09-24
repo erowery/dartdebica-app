@@ -20,8 +20,8 @@ export interface TierDef {
 export const PYRAMID_TIERS: TierDef[] = [
   {
     id: 'adept',
-    title: 'Adept Darta',
-    subtitle: 'Średnia: 35–45',
+    title: 'Adept',
+    subtitle: 'AVG: 35-45',
     minAvg: 35,
     maxAvg: 45,
     color: '#22c55e',
@@ -54,8 +54,8 @@ export const PYRAMID_TIERS: TierDef[] = [
   },
   {
     id: 'debiutant',
-    title: 'Debiutant Darta',
-    subtitle: 'Średnia: 45–55',
+    title: 'Debiutant',
+    subtitle: 'AVG: 45-55',
     minAvg: 45,
     maxAvg: 55,
     color: '#84cc16',
@@ -88,8 +88,8 @@ export const PYRAMID_TIERS: TierDef[] = [
   },
   {
     id: 'specjalista',
-    title: 'Specjalista Darta',
-    subtitle: 'Średnia: 55–65',
+    title: 'Specjalista',
+    subtitle: 'AVG: 55-65',
     minAvg: 55,
     maxAvg: 65,
     color: '#06b6d4',
@@ -122,8 +122,8 @@ export const PYRAMID_TIERS: TierDef[] = [
   },
   {
     id: 'ekspert',
-    title: 'Ekspert Darta',
-    subtitle: 'Średnia: 65–75',
+    title: 'Ekspert',
+    subtitle: 'AVG: 65-75',
     minAvg: 65,
     maxAvg: 75,
     color: '#3b82f6',
@@ -156,8 +156,8 @@ export const PYRAMID_TIERS: TierDef[] = [
   },
   {
     id: 'mistrz',
-    title: 'Mistrz Darta',
-    subtitle: 'Średnia: 75+',
+    title: 'Mistrz',
+    subtitle: 'AVG: 75+',
     minAvg: 75,
     maxAvg: 999,
     color: '#eab308',

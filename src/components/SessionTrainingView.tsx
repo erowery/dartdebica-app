@@ -117,13 +117,36 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
     setPendingPhaseIndex(null);
   }
 
-  function setField(field: string, value: string) {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  function toggleFieldOption(field: string, option: string, spectrum: boolean, exclusiveOption?: string) {
+    setFormData((prev) => {
+      const current = (prev[field as keyof TrainingFormData] as string[] | undefined) || [];
+
+      if (spectrum) {
+        // Pole jednokrotnego wyboru (stan/spektrum) - zawsze zastępuje poprzedni wybór
+        return { ...prev, [field]: [option] };
+      }
+
+      let next: string[];
+      if (current.includes(option)) {
+        // odznaczenie
+        next = current.filter((v) => v !== option);
+      } else if (exclusiveOption && option === exclusiveOption) {
+        // wybrano opcję wykluczającą - kasuje wszystkie inne
+        next = [option];
+      } else if (exclusiveOption) {
+        // wybrano zwykłą opcję - usuwa opcję wykluczającą, jeśli była zaznaczona
+        next = [...current.filter((v) => v !== exclusiveOption), option];
+      } else {
+        next = [...current, option];
+      }
+
+      return { ...prev, [field]: next };
+    });
   }
 
   const mm = Math.floor(secondsLeft / 60);
   const ss = secondsLeft % 60;
-  const label = type === 'double' ? 'Trening Double' : 'Trening Triple';
+  const label = type === 'double' ? 'Trening Podwójnych' : 'Trening Potrójnych';
   const color = type === 'double' ? '#f87171' : '#2dd6a7';
 
   const recentLog = log.filter((e) => e.type === type).slice(-5).reverse();
@@ -231,7 +254,10 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
   if (pendingPhaseIndex !== null) {
     const fields = getPhaseFields(pendingPhaseIndex, type);
     const isLastPhase = pendingPhaseIndex === plan.length - 1;
-    const allAnswered = fields.every((f) => !!formData[f.field as keyof TrainingFormData]);
+    const allAnswered = fields.every((f) => {
+      const val = formData[f.field as keyof TrainingFormData] as string[] | undefined;
+      return !!val && val.length > 0;
+    });
     const scoreReady = !isLastPhase || typeof formData.OVERALL_SCORE === 'number';
 
     return (
@@ -240,31 +266,34 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
         <h2 className="text-lg font-bold text-white mb-5">{plan[pendingPhaseIndex].name}</h2>
 
         <div className="space-y-5 mb-6">
-          {fields.map((f) => (
-            <div key={f.field}>
-              <p className="text-sm text-slate-300 font-medium mb-2">{f.label}</p>
-              <div className="flex flex-wrap gap-2">
-                {f.options.map((opt) => (
-                  <button
-                    key={opt}
-                    onClick={() => setField(f.field, opt)}
-                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                      formData[f.field as keyof TrainingFormData] === opt
-                        ? 'text-white border-transparent'
-                        : 'bg-ink-800/60 border-ink-700 text-slate-400 hover:text-slate-200'
-                    }`}
-                    style={
-                      formData[f.field as keyof TrainingFormData] === opt
-                        ? { background: `linear-gradient(to bottom, ${color}, ${color}bb)` }
-                        : {}
-                    }
-                  >
-                    {opt}
-                  </button>
-                ))}
+          {fields.map((f) => {
+            const selected = (formData[f.field as keyof TrainingFormData] as string[] | undefined) || [];
+            return (
+              <div key={f.field}>
+                <p className="text-sm text-slate-300 font-medium mb-2">{f.label}</p>
+                {!f.spectrum && (
+                  <p className="text-[11px] text-slate-500 mb-2">Możesz wybrać kilka odpowiedzi</p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {f.options.map((opt) => {
+                    const isSelected = selected.includes(opt);
+                    return (
+                      <button
+                        key={opt}
+                        onClick={() => toggleFieldOption(f.field, opt, !!f.spectrum, f.exclusiveOption)}
+                        className={`px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                          isSelected ? 'text-white border-transparent' : 'bg-ink-800/60 border-ink-700 text-slate-400 hover:text-slate-200'
+                        }`}
+                        style={isSelected ? { background: `linear-gradient(to bottom, ${color}, ${color}bb)` } : {}}
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {isLastPhase && (
             <div>

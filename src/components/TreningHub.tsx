@@ -59,7 +59,7 @@ export default function TreningHub({ myTpid, average }: { myTpid: string; averag
           className="w-full text-left p-5 bg-ink-800/60 border border-ink-700 hover:border-red-400/40 rounded-2xl transition-all"
         >
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-base font-bold text-white">🔴 Trening Double</h3>
+            <h3 className="text-base font-bold text-white">🔴 Trening Podwójnych</h3>
           </div>
           <p className="text-sm text-slate-400">
             Pełna sesja (75 lub 115 min): rozgrzewka, podwójne sektory, symulacja meczu, trening mentalny.
@@ -71,7 +71,7 @@ export default function TreningHub({ myTpid, average }: { myTpid: string; averag
           className="w-full text-left p-5 bg-ink-800/60 border border-ink-700 hover:border-brand/40 rounded-2xl transition-all"
         >
           <div className="flex items-center justify-between mb-1">
-            <h3 className="text-base font-bold text-white">🟢 Trening Triple</h3>
+            <h3 className="text-base font-bold text-white">🟢 Trening Potrójnych</h3>
           </div>
           <p className="text-sm text-slate-400">
             Pełna sesja (75 lub 115 min): rozgrzewka, potrójne sektory, symulacja meczu, trening mentalny.
@@ -84,7 +84,7 @@ export default function TreningHub({ myTpid, average }: { myTpid: string; averag
 
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="text-xs text-slate-500 hover:text-slate-300 mb-4 flex items-center gap-1">
+    <button onClick={onClick} className="text-sm text-slate-400 hover:text-slate-200 mb-4 flex items-center gap-1">
       ← Wróć do wyboru treningu
     </button>
   );

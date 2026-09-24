@@ -149,8 +149,6 @@ export default function TreningView({ myTpid, average }: { myTpid: string; avera
   const mm = Math.floor(secondsLeft / 60);
   const ss = secondsLeft % 60;
 
-  const recentLog = log.slice(-8).reverse();
-
   return (
     <div>
       <h2 className="text-xl font-bold mb-1">Darterska Piramida Treningowa</h2>
@@ -210,6 +208,15 @@ export default function TreningView({ myTpid, average }: { myTpid: string; avera
           })}
         </div>
       </div>
+
+      {(currentFlat > 0 || progress.completed) && !justCompletedTier && (
+        <button
+          onClick={restartTier}
+          className="w-full mb-6 py-2 rounded-xl text-xs font-semibold bg-ink-800/40 border border-ink-700 text-slate-500 hover:text-red-400 hover:border-red-500/40 transition-all"
+        >
+          ↺ Resetuj postęp tego poziomu
+        </button>
+      )}
 
       {justCompletedTier ? (
         <div className="p-5 bg-gold/10 border-2 border-gold/50 rounded-2xl text-center mb-6">
@@ -281,24 +288,6 @@ export default function TreningView({ myTpid, average }: { myTpid: string; avera
               </button>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Historia */}
-      {recentLog.length > 0 && (
-        <div>
-          <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Ostatnio ukończone wyzwania</p>
-          <div className="space-y-2">
-            {recentLog.map((e, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-sm bg-ink-800/40 border border-ink-700/60 rounded-xl px-4 py-2.5">
-                <span className="flex items-center gap-1 text-[10px] text-slate-500 shrink-0">
-                  <IconStopwatch className="w-3 h-3" /> {e.date}
-                </span>
-                <p className="text-white truncate flex-1">{e.challenge}</p>
-                <span className="text-[10px] text-slate-500 shrink-0">{e.tierTitle} · P{e.poziom}</span>
-              </div>
-            ))}
-          </div>
         </div>
       )}
     </div>

@@ -34,7 +34,7 @@ export function getSessionPlan(type: SessionType): SessionPhase[] {
       {
         title: 'Symulacja stresu',
         description:
-          'Wyobraź sobie różne scenariusze, w których może pojawić się stres, np. ostatnia lotka w decydującym legu.',
+          'Wyobraź sobie sytuację meczową wywołującą presję (np. ostatnia lotka na wygraną) i jednocześnie rzucaj lotkami w tarczę, starając się odtworzyć fizyczne odczucie stresu przy realnym rzucie.',
         minutesFor75: 3,
         minutesFor115: 3,
       },
@@ -48,19 +48,13 @@ export function getSessionPlan(type: SessionType): SessionPhase[] {
   };
 
   const coolDown: SessionPhase = {
-    name: 'Cool down i analiza',
+    name: 'Cool down',
     exercises: [
       {
         title: 'Luźne rzuty',
         description: 'Kończ trening kilkoma luźnymi rzutami, bez konkretnego celu, aby zrelaksować mięśnie.',
-        minutesFor75: 7,
-        minutesFor115: 7,
-      },
-      {
-        title: 'Analiza treningu',
-        description: 'Przeanalizuj, co poszło dobrze, a co wymaga poprawy. Zapisz cele na następny trening.',
-        minutesFor75: 3,
-        minutesFor115: 3,
+        minutesFor75: 10,
+        minutesFor115: 10,
       },
     ],
   };
@@ -95,14 +89,16 @@ export function getSessionPlan(type: SessionType): SessionPhase[] {
         name: 'Strategia i symulacja',
         exercises: [
           {
-            title: 'Symulacja gry 301',
-            description: 'Graj pełną grę 301 przeciwko CPU. Dostosuj poziom tak, żeby komputer wygrywał 75% legów.',
+            title: 'Finishing 50',
+            description:
+              'Zacznij od wartości do skończenia równej 50. Gdy trafisz - dodajesz 10 i próbujesz zamknąć 60. Gdy nie trafisz - odejmujesz 1 i próbujesz zakończyć nowy, niższy wynik. Dla początkujących próba to 6 lotek, dla średniozaawansowanych i wyżej - 3 lotki.',
             minutesFor75: 10,
             minutesFor115: 20,
           },
           {
             title: 'Zegar na doublach',
-            description: 'Graj zegar na doublach, zwracając szczególną uwagę na te sektory, z którymi masz największy problem.',
+            description:
+              'Rzucaj kolejno w wartości podwójne zaczynając od D1, przechodząc D2, D3... aż do D20, a na koniec w bull. Do kolejnej wartości przechodzisz dopiero po trafieniu poprzedniej.',
             minutesFor75: 10,
             minutesFor115: 20,
           },
@@ -120,13 +116,13 @@ export function getSessionPlan(type: SessionType): SessionPhase[] {
       name: 'Ćwiczenia główne',
       exercises: [
         {
-          title: 'Rzuty w triple 20',
+          title: 'T20',
           description: 'Zwróć uwagę na powtarzalność ruchu i pozycję ciała - pracuj nad maksymalną powtarzalnością.',
           minutesFor75: 10,
           minutesFor115: 20,
         },
         {
-          title: 'Rzuty w triple 19',
+          title: 'T19',
           description: 'Zwróć uwagę na powtarzalność ruchu i pozycję ciała - pracuj nad maksymalną powtarzalnością.',
           minutesFor75: 10,
           minutesFor115: 20,
@@ -143,14 +139,16 @@ export function getSessionPlan(type: SessionType): SessionPhase[] {
       name: 'Strategia i symulacja',
       exercises: [
         {
-          title: 'Symulacja gry 301',
-          description: 'Graj pełną grę 301 przeciwko CPU. Dostosuj poziom tak, żeby komputer wygrywał 75% legów.',
+          title: 'Gra 170',
+          description:
+            'Zaczynasz od 170 punktów i starasz się zejść do zera w jak najmniejszej liczbie podejść, wykorzystując przede wszystkim rzuty w pola potrójne. Grasz sam ze sobą, licząc ile podejść potrzebowałeś.',
           minutesFor75: 10,
           minutesFor115: 20,
         },
         {
           title: 'Finishing 50',
-          description: 'Graj w Finishing 50 - dla początkujących na 6 lotek, dla średniozaawansowanych na 3 lotki.',
+          description:
+            'Zacznij od wartości do skończenia równej 50. Gdy trafisz - dodajesz 10 i próbujesz zamknąć 60. Gdy nie trafisz - odejmujesz 1 i próbujesz zakończyć nowy, niższy wynik. Dla początkujących próba to 6 lotek, dla średniozaawansowanych i wyżej - 3 lotki.',
           minutesFor75: 10,
           minutesFor115: 20,
         },
