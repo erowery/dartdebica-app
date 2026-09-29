@@ -105,7 +105,7 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
     const isLastPhase = pendingPhaseIndex === plan.length - 1;
 
     if (isLastPhase) {
-      const fb = generateTrainingFeedback(formData);
+      const fb = generateTrainingFeedback(formData, type);
       setFeedback(fb);
       if (totalMinutes) {
         appendSessionLog(myTpid, { date: todayStr(), type, totalMinutes, formData, feedback: fb });

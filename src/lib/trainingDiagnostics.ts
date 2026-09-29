@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionType } from '@/lib/sessionTraining';
+import { getMainBlockFeedback, MainBlockResult } from '@/lib/mainBlockDiagnostics';
 
 export interface PhaseField {
   field: string;
@@ -12,6 +13,21 @@ export interface PhaseField {
   exclusiveOption?: string;
 }
 
+export const MECHANICS_NONE = 'Brak problemów / wysoka powtarzalność';
+export const HARD_SECTOR_NONE = 'Bez problemów / wysoka skuteczność';
+
+const FINISHING50_NONE = 'Brak problemów / płynne czyszczenie i zamykanie';
+const DOUBLE_CLOCK_NONE = 'Brak problemów / płynne przechodzenie tarczy';
+const GAME170_NONE = 'Brak problemów / szybkie zamykanie w niewielu podejściach';
+
+const FINISHING50_OPTIONS = [
+  'Brak trafienia w duży sektor na ustawienie dubla (np. pudło w duże pole zamiast S10/S16)',
+  'Nietrafianie dubla w pierwszej serii (przez co wynik od razu spadał o -1)',
+  'Przypadkowe trafienie w dubel/triple przy ustawianiu (popsucie licznika)',
+  'Trudność z powrotem do skupienia po spadku punktowym (efekt "spalenia" serii)',
+  FINISHING50_NONE,
+];
+
 /** Pola formularza pokazywane po zakończeniu danego bloku (0-4) */
 export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseField[] {
   switch (phaseIndex) {
@@ -20,19 +36,19 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
         {
           field: 'BODY_STATE',
           label: 'Jak czuło się ciało po rozgrzewce?',
-          options: ['Mięśnie zimne/spięte', 'Rozgrzany w normie', 'Świetnie rozgrzany'],
+          options: ['Mięśnie zimne / spięte', 'Rozgrzany w normie', 'Świetnie rozgrzany'],
           spectrum: true,
         },
         {
           field: 'RELEASE_FEEL',
           label: 'Jak wyglądało wypuszczenie lotki?',
-          options: ['Ręka spięta / zrywanie', 'Nieregularny rytm', 'Luźny, płynny rzut'],
+          options: ['Ręka spięta / zrywanie rzutu', 'Nieregularny rytm / falowanie płynności', 'Luźny, płynny rzut'],
           spectrum: true,
         },
         {
           field: 'MENTAL_READINESS',
           label: 'Gotowość mentalna?',
-          options: ['Brak skupienia', 'Średnia koncentracja', 'Pełna gotowość'],
+          options: ['Brak skupienia / rozproszenie', 'Średnia koncentracja', 'Pełna gotowość i ostrość'],
           spectrum: true,
         },
       ];
@@ -43,21 +59,24 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
           label: 'Która sekwencja sprawiła najwięcej problemów?',
           options:
             type === 'double'
-              ? ['D20/D10/D5', 'D16/D8/D4', 'Bullseye', 'Bez problemów']
-              : ['T20', 'T19', 'Bullseye', 'Bez problemów'],
-          exclusiveOption: 'Bez problemów',
+              ? ['D20 / D10 / D5 (Góra / Prawo)', 'D16 / D8 / D4 (Lewa strona)', 'Bullseye (Środek tarczy)', HARD_SECTOR_NONE]
+              : ['Triple 20 (Góra tarczy)', 'Triple 19 (Dół tarczy)', 'Bullseye (Środek tarczy)', HARD_SECTOR_NONE],
+          exclusiveOption: HARD_SECTOR_NONE,
         },
         {
           field: 'MECHANICS_ISSUE',
           label: 'Co najlepiej opisuje problem techniczny?',
           options: [
-            'Poniżej celu (spadek łokcia / za wczesne wypuszczenie)',
-            'Powyżej celu (przepchnięcie lotki)',
-            'Ściąganie w lewo/prawo (uciekanie łokcia / obrót tułowia)',
-            'Niestabilna postawa / utrata balansu',
-            'Brak problemów / wysoka powtarzalność',
+            'Poniżej celu (spadek łokcia / zbyt szybkie opadnięcie ręki)',
+            'Powyżej celu (przepchnięcie lotki / zbyt późne otwarcie dłoni)',
+            'Ściąganie w lewo/prawo (uciekanie łokcia z osi / obrót tułowia)',
+            'Niestabilna postawa / utrata balansu na oche',
+            type === 'double'
+              ? 'Różna wysokość rzutów w jednej serii (tzw. "drabinka")'
+              : 'Ciasne rzuty, ale w pojedynczą wartość (blokowanie się na drutach T20/T19)',
+            MECHANICS_NONE,
           ],
-          exclusiveOption: 'Brak problemów / wysoka powtarzalność',
+          exclusiveOption: MECHANICS_NONE,
         },
       ];
     case 2:
@@ -66,24 +85,20 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
             {
               field: 'FINISHING50_PROBLEM',
               label: 'Co sprawiało trudność w Finishing 50?',
-              options: [
-                'Trudność z wykonaniem podwójnego trafienia na start (50)',
-                'Gubienie się w liczeniu aktualnego celu',
-                'Frustracja przy cofaniu się (-1)',
-                'Brak problemów',
-              ],
-              exclusiveOption: 'Brak problemów',
+              options: FINISHING50_OPTIONS,
+              exclusiveOption: FINISHING50_NONE,
             },
             {
               field: 'DOUBLE_CLOCK_PROBLEM',
               label: 'Co sprawiało trudność w Zegarze na doublach?',
               options: [
-                'Trudność z konkretnymi wysokimi wartościami (D16-D20)',
-                'Utrata rytmu przy przejściu między wartościami',
-                'Zbyt długi czas na pojedynczą wartość',
-                'Brak problemów',
+                'Seryjne pudła na zewnątrz tarczy (lotki tuż obok drutu w puste pole)',
+                'Problem z dublami na dole tarczy (D3, D19, D7, D17) - spadek łokcia / złe pochylenie',
+                'Zacinanie się na jednym dublu (strata wielu serii na jedną wartość)',
+                'Trudność z płynnym przestawianiem się na oche po trafieniu (zmiana kąta rzutu)',
+                DOUBLE_CLOCK_NONE,
               ],
-              exclusiveOption: 'Brak problemów',
+              exclusiveOption: DOUBLE_CLOCK_NONE,
             },
           ]
         : [
@@ -91,23 +106,19 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
               field: 'GAME170_PROBLEM',
               label: 'Co sprawiało trudność w Grze 170?',
               options: [
-                'Trudność z trafieniem w triple pod presją zejścia',
-                'Zbyt wolne tempo / dużo podejść',
-                'Problem z wyliczeniem optymalnej kombinacji',
-                'Brak problemów',
+                'Brak pierwszej lotki w T20 (trudność ze "wejściem" w serię potrójnym)',
+                'Asekuracyjne rzuty w duże pola (brak ryzyka rzutu w potrójne pole)',
+                'Gubienie się w optymalnej ścieżce wyjścia przy nietrafionym pierwszym potrójnym',
+                'Spadek skuteczności na dublu kończącym po trafieniu potrójnych',
+                GAME170_NONE,
               ],
-              exclusiveOption: 'Brak problemów',
+              exclusiveOption: GAME170_NONE,
             },
             {
               field: 'FINISHING50_PROBLEM',
               label: 'Co sprawiało trudność w Finishing 50?',
-              options: [
-                'Trudność z wykonaniem podwójnego trafienia na start (50)',
-                'Gubienie się w liczeniu aktualnego celu',
-                'Frustracja przy cofaniu się (-1)',
-                'Brak problemów',
-              ],
-              exclusiveOption: 'Brak problemów',
+              options: FINISHING50_OPTIONS,
+              exclusiveOption: FINISHING50_NONE,
             },
           ];
     case 3:
@@ -115,7 +126,11 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
         {
           field: 'STRESS_SIMULATION',
           label: 'Jak poszła symulacja stresu?',
-          options: ['Trudność z wyobrażeniem sytuacji', 'Odczuwalny realny stres/tętno', 'Pełny spokój / brak reakcji'],
+          options: [
+            'Trudność z wyobrażeniem sytuacji meczowej',
+            'Odczuwalny realny stres / skok tętna',
+            'Pełny spokój / brak reakcji emocjonalnej',
+          ],
           spectrum: true,
         },
         {
@@ -130,7 +145,7 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
         {
           field: 'FATIGUE',
           label: 'Jak się czujesz po treningu?',
-          options: ['Ręka/bark zmęczony', 'Zmęczenie psychiczne / brak ostrości', 'Świeżość do końca'],
+          options: ['Ręka / bark zmęczony', 'Zmęczenie psychiczne / spadek koncentracji', 'Świeżość do końca'],
           spectrum: true,
         },
       ];
@@ -158,144 +173,142 @@ export interface TrainingFeedback {
   positives: string[];
   negatives: string[];
   coach_advice: string;
+  mainBlockDetails: MainBlockResult[];
 }
 
 function has(arr: string[] | undefined, value: string): boolean {
   return !!arr && arr.includes(value);
 }
 
-export function generateTrainingFeedback(data: TrainingFormData): TrainingFeedback {
+export function generateTrainingFeedback(data: TrainingFormData, type: SessionType): TrainingFeedback {
   const positives: string[] = [];
   const negatives: string[] = [];
 
   if (has(data.RELEASE_FEEL, 'Luźny, płynny rzut')) positives.push('Luźny i płynny rzut podczas rozgrzewki');
-  if (has(data.RELEASE_FEEL, 'Ręka spięta / zrywanie')) negatives.push('Spięta ręka / zrywanie przy rzucie w rozgrzewce');
+  if (has(data.RELEASE_FEEL, 'Ręka spięta / zrywanie rzutu')) negatives.push('Spięta ręka / zrywanie przy rzucie w rozgrzewce');
+  if (has(data.RELEASE_FEEL, 'Nieregularny rytm / falowanie płynności')) negatives.push('Nieregularny rytm rzutu w rozgrzewce');
 
   if (has(data.BODY_STATE, 'Świetnie rozgrzany')) positives.push('Świetne rozgrzanie przed treningiem');
-  if (has(data.BODY_STATE, 'Mięśnie zimne/spięte')) negatives.push('Zimne, spięte mięśnie na starcie treningu');
+  if (has(data.BODY_STATE, 'Mięśnie zimne / spięte')) negatives.push('Zimne, spięte mięśnie na starcie treningu');
 
-  if (has(data.MENTAL_READINESS, 'Pełna gotowość')) positives.push('Pełna gotowość mentalna od początku');
-  if (has(data.MENTAL_READINESS, 'Brak skupienia')) negatives.push('Brak skupienia na starcie treningu');
+  if (has(data.MENTAL_READINESS, 'Pełna gotowość i ostrość')) positives.push('Pełna gotowość mentalna od początku');
+  if (has(data.MENTAL_READINESS, 'Brak skupienia / rozproszenie')) negatives.push('Brak skupienia na starcie treningu');
 
-  if (has(data.MECHANICS_ISSUE, 'Brak problemów / wysoka powtarzalność'))
-    positives.push('Wysoka powtarzalność techniki rzutu');
-  if (has(data.MECHANICS_ISSUE, 'Poniżej celu (spadek łokcia / za wczesne wypuszczenie)'))
-    negatives.push('Opuszczanie łokcia przy rzutach poniżej celu');
-  if (has(data.MECHANICS_ISSUE, 'Powyżej celu (przepchnięcie lotki)'))
-    negatives.push('Przepchnięcie lotki przy rzutach powyżej celu');
-  if (has(data.MECHANICS_ISSUE, 'Ściąganie w lewo/prawo (uciekanie łokcia / obrót tułowia)'))
-    negatives.push('Ściąganie lotek w bok od celu');
-  if (has(data.MECHANICS_ISSUE, 'Niestabilna postawa / utrata balansu'))
-    negatives.push('Utrata balansu przy rzutach w skrajne sektory');
+  // Blok Ćwiczenia główne - macierz diagnostyczna per strefa
+  const mainBlockDetails = getMainBlockFeedback(data.HARD_SECTOR || [], data.MECHANICS_ISSUE || [], type);
 
-  if (has(data.FINISHING50_PROBLEM, 'Brak problemów')) positives.push('Finishing 50 bez większych problemów');
-  if (has(data.FINISHING50_PROBLEM, 'Trudność z wykonaniem podwójnego trafienia na start (50)'))
-    negatives.push('Trudność ze startowym podwójnym trafieniem w Finishing 50');
-  if (has(data.FINISHING50_PROBLEM, 'Gubienie się w liczeniu aktualnego celu'))
-    negatives.push('Gubienie się w liczeniu celu podczas Finishing 50');
-  if (has(data.FINISHING50_PROBLEM, 'Frustracja przy cofaniu się (-1)'))
-    negatives.push('Frustracja przy cofaniu wyniku w Finishing 50');
+  if (has(data.MECHANICS_ISSUE, MECHANICS_NONE)) positives.push('Wysoka powtarzalność techniki w ćwiczeniach głównych');
+  mainBlockDetails.forEach((d) => negatives.push(`${d.zoneShort}: ${d.issueShort}`));
 
-  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Brak problemów')) positives.push('Zegar na doublach bez większych problemów');
-  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Trudność z konkretnymi wysokimi wartościami (D16-D20)'))
-    negatives.push('Trudność z wysokimi wartościami (D16-D20) w Zegarze');
-  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Utrata rytmu przy przejściu między wartościami'))
-    negatives.push('Utrata rytmu przy przechodzeniu między wartościami w Zegarze');
-  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Zbyt długi czas na pojedynczą wartość'))
-    negatives.push('Zbyt długi czas na pojedynczą wartość w Zegarze');
+  if (has(data.FINISHING50_PROBLEM, FINISHING50_NONE)) positives.push('Finishing 50 bez większych problemów');
+  if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[0])) negatives.push('Trudność z ustawieniem dubla na starcie Finishing 50');
+  if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[1])) negatives.push('Nietrafianie dubla w pierwszej serii Finishing 50');
+  if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[2])) negatives.push('Przypadkowe trafienia psujące licznik w Finishing 50');
+  if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[3])) negatives.push('Trudność z powrotem do skupienia po spadku w Finishing 50');
 
-  if (has(data.GAME170_PROBLEM, 'Brak problemów')) positives.push('Gra 170 bez większych problemów');
-  if (has(data.GAME170_PROBLEM, 'Trudność z trafieniem w triple pod presją zejścia'))
-    negatives.push('Trudność z celnością w triple pod presją w Grze 170');
-  if (has(data.GAME170_PROBLEM, 'Zbyt wolne tempo / dużo podejść'))
-    negatives.push('Zbyt wolne tempo / dużo podejść w Grze 170');
-  if (has(data.GAME170_PROBLEM, 'Problem z wyliczeniem optymalnej kombinacji'))
-    negatives.push('Trudność z wyliczeniem kombinacji w Grze 170');
+  if (has(data.DOUBLE_CLOCK_PROBLEM, DOUBLE_CLOCK_NONE)) positives.push('Zegar na doublach bez większych problemów');
+  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Seryjne pudła na zewnątrz tarczy (lotki tuż obok drutu w puste pole)'))
+    negatives.push('Seryjne pudła tuż obok drutu w Zegarze na doublach');
+  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Problem z dublami na dole tarczy (D3, D19, D7, D17) - spadek łokcia / złe pochylenie'))
+    negatives.push('Problem z dublami na dole tarczy w Zegarze na doublach');
+  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Zacinanie się na jednym dublu (strata wielu serii na jedną wartość)'))
+    negatives.push('Zacinanie się na jednym dublu w Zegarze na doublach');
+  if (has(data.DOUBLE_CLOCK_PROBLEM, 'Trudność z płynnym przestawianiem się na oche po trafieniu (zmiana kąta rzutu)'))
+    negatives.push('Trudność z przestawianiem się na oche w Zegarze na doublach');
 
-  if (has(data.STRESS_SIMULATION, 'Pełny spokój / brak reakcji')) positives.push('Pełny spokój podczas symulacji stresu');
-  if (has(data.STRESS_SIMULATION, 'Odczuwalny realny stres/tętno'))
+  if (has(data.GAME170_PROBLEM, GAME170_NONE)) positives.push('Gra 170 bez większych problemów');
+  if (has(data.GAME170_PROBLEM, 'Brak pierwszej lotki w T20 (trudność ze "wejściem" w serię potrójnym)'))
+    negatives.push('Trudność z wejściem w serię T20 w Grze 170');
+  if (has(data.GAME170_PROBLEM, 'Asekuracyjne rzuty w duże pola (brak ryzyka rzutu w potrójne pole)'))
+    negatives.push('Zbyt asekuracyjne rzuty w Grze 170');
+  if (has(data.GAME170_PROBLEM, 'Gubienie się w optymalnej ścieżce wyjścia przy nietrafionym pierwszym potrójnym'))
+    negatives.push('Gubienie się w ścieżce wyjścia w Grze 170');
+  if (has(data.GAME170_PROBLEM, 'Spadek skuteczności na dublu kończącym po trafieniu potrójnych'))
+    negatives.push('Spadek skuteczności na dublu kończącym w Grze 170');
+
+  if (has(data.STRESS_SIMULATION, 'Pełny spokój / brak reakcji emocjonalnej')) positives.push('Pełny spokój podczas symulacji stresu');
+  if (has(data.STRESS_SIMULATION, 'Odczuwalny realny stres / skok tętna'))
     negatives.push('Realny stres podczas symulacji sytuacji stresowej');
 
-  if (has(data.BREATHING_EFFECT, 'Pełny spokój i tętno w normie'))
-    positives.push('Pełne wyciszenie po ćwiczeniach oddechowych');
-  if (has(data.BREATHING_EFFECT, 'Nadal spięty / ciało sztywne'))
-    negatives.push('Ciało wciąż spięte mimo ćwiczeń oddechowych');
+  if (has(data.BREATHING_EFFECT, 'Pełny spokój i tętno w normie')) positives.push('Pełne wyciszenie po ćwiczeniach oddechowych');
+  if (has(data.BREATHING_EFFECT, 'Nadal spięty / ciało sztywne')) negatives.push('Ciało wciąż spięte mimo ćwiczeń oddechowych');
 
   if (has(data.FATIGUE, 'Świeżość do końca')) positives.push('Świeżość fizyczna i mentalna do końca treningu');
-  if (has(data.FATIGUE, 'Ręka/bark zmęczony')) negatives.push('Zmęczenie ręki/barku pod koniec treningu');
-  if (has(data.FATIGUE, 'Zmęczenie psychiczne / brak ostrości')) negatives.push('Zmęczenie psychiczne pod koniec treningu');
+  if (has(data.FATIGUE, 'Ręka / bark zmęczony')) negatives.push('Zmęczenie ręki/barku pod koniec treningu');
+  if (has(data.FATIGUE, 'Zmęczenie psychiczne / spadek koncentracji')) negatives.push('Zmęczenie psychiczne pod koniec treningu');
 
-  // Priorytet: Mechanika > Technika w grach > Presja/Psychika > Zmęczenie/Rytm > Sukces
+  // Priorytet: Mechanika (strefy) > Technika w grach > Presja/Psychika > Zmęczenie/Rytm > Sukces
   let summary_title = 'Solidna sesja treningowa';
   let coach_advice = 'Trening przebiegł bez większych zastrzeżeń - kontynuuj w tym stylu i stopniowo podnoś poprzeczkę.';
 
-  if (has(data.MECHANICS_ISSUE, 'Poniżej celu (spadek łokcia / za wczesne wypuszczenie)')) {
-    summary_title = 'Solidny trening z potrzebą korekty pozycji łokcia';
-    coach_advice =
-      'Rzucając w dolne sektory, nie obniżaj ręki w łokciu. Wysokość rzutu koryguj delikatnym pochyleniem tułowia w biodrze, zachowując stałą wysokość łokcia. Na kolejnym treningu skup się na stabilnym łokciu.';
-  } else if (has(data.MECHANICS_ISSUE, 'Ściąganie w lewo/prawo (uciekanie łokcia / obrót tułowia)')) {
-    summary_title = 'Solidny trening z potrzebą pracy nad osiowością';
-    coach_advice =
-      'Ściąganie lotek na zewnątrz sektora oznacza, że przedramię zbacza z toru rzutu lub obracasz barki. Dokończ ruch ręki tak, aby dłoń i palce po wyproście wskazywały dokładnie w cel. Upewnij się też, że stopa wykroczna stoi nieruchomo.';
-  } else if (has(data.MECHANICS_ISSUE, 'Powyżej celu (przepchnięcie lotki)')) {
-    summary_title = 'Solidny trening z potrzebą korekty wypuszczenia';
-    coach_advice =
-      'Rzucanie powyżej celu to efekt zbyt późnego otwarcia dłoni lub nadrabiania siłą z barku. Rozluźnij chwyt i pozwól lotce "wylecieć" z dłoni w najwyższym punkcie łuku rzutu, bez dodatkowego pchania.';
-  } else if (has(data.MECHANICS_ISSUE, 'Niestabilna postawa / utrata balansu')) {
-    summary_title = 'Solidny trening z potrzebą pracy nad stabilnością';
-    coach_advice =
-      'Utrata balansu destabilizuje każdy rzut. Zablokuj ciężar ciała na pięcie stopy wykrocznej i nie "nurkuj" do tarczy. Zmiana celu nie może wpływać na zmianę punktu ciężkości Twojej postawy.';
-  } else if (has(data.FINISHING50_PROBLEM, 'Frustracja przy cofaniu się (-1)')) {
+  if (mainBlockDetails.length > 0) {
+    summary_title =
+      mainBlockDetails.length === 1
+        ? `Solidny trening - popracuj nad strefą ${mainBlockDetails[0].zoneShort}`
+        : 'Solidny trening - kilka stref technicznych do dopracowania';
+    coach_advice = mainBlockDetails.map((d) => `${d.zoneShort}: ${d.advice}`).join('\n\n');
+  } else if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[3])) {
     summary_title = 'Dobra forma techniczna, odporność psychiczna do dopracowania';
     coach_advice =
-      'Cofanie się o 1 punkt po nietrafieniu bywa frustrujące, ale to naturalna część tej gry - jej celem jest właśnie odporność psychiczna. Traktuj każde cofnięcie jako element treningu cierpliwości, nie porażkę.';
-  } else if (has(data.FINISHING50_PROBLEM, 'Trudność z wykonaniem podwójnego trafienia na start (50)')) {
+      'Spadek punktowy w Finishing 50 potrafi "spalić" koncentrację na resztę serii. Po nietrafieniu zrób krótką mikropauzę - jeden spokojny oddech - zanim podejmiesz kolejną próbę, zamiast rzucać od razu pod wpływem frustracji.';
+  } else if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[1])) {
     summary_title = 'Dobra forma techniczna, start gry do dopracowania';
     coach_advice =
-      'Start w Finishing 50 wymaga trafienia dokładnie D25 lub D20. Zanim zaczniesz grę, wykonaj 3-5 rzutów rozgrzewkowych czysto w ten jeden segment, żeby ustawić rękę na konkretną wysokość przed pierwszym podejściem.';
-  } else if (has(data.FINISHING50_PROBLEM, 'Gubienie się w liczeniu aktualnego celu')) {
-    summary_title = 'Dobra forma techniczna, koncentracja do dopracowania';
+      'Nietrafienie dubla w pierwszej serii Finishing 50 od razu cofa Cię o punkt. Zanim zaczniesz grę, wykonaj 3-5 rzutów rozgrzewkowych czysto w double, żeby ustawić rękę przed pierwszym podejściem.';
+  } else if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[0])) {
+    summary_title = 'Dobra forma techniczna, ustawienie dubla do dopracowania';
     coach_advice =
-      'Przy dynamicznie zmieniającym się celu (+10/-1) łatwo stracić orientację. Przed każdym rzutem powtórz w myślach aktualny cel, zanim staniesz na linii oche - to eliminuje pomyłki wynikające z pośpiechu.';
-  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Trudność z konkretnymi wysokimi wartościami (D16-D20)')) {
-    summary_title = 'Dobra forma techniczna, wysokie double do dopracowania';
+      'Zanim spróbujesz trafić double, musisz najpierw celnie "ustawić" wynik dużym polem. Potraktuj to jako osobny, równie ważny element gry - nie spiesz się z pierwszym rzutem serii.';
+  } else if (has(data.FINISHING50_PROBLEM, FINISHING50_OPTIONS[2])) {
+    summary_title = 'Dobra forma techniczna, kontrola nad ustawianiem do dopracowania';
     coach_advice =
-      'Wysokie double (D16-D20) leżą blisko siebie na tarczy, co zwiększa ryzyko pomyłki celu. Zwolnij tempo właśnie przy tych wartościach i wydłuż moment celowania przed rzutem.';
-  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Utrata rytmu przy przejściu między wartościami')) {
-    summary_title = 'Dobra forma techniczna, rytm do dopracowania';
+      'Przypadkowe trafienia w double/triple podczas "ustawiania" wyniku psują licznik i wymuszają start od nowa. Celuj świadomie w konkretne pole dużego sektora, a nie ogólnie "w okolice" celu.';
+  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Problem z dublami na dole tarczy (D3, D19, D7, D17) - spadek łokcia / złe pochylenie')) {
+    summary_title = 'Dobra forma techniczna, dolne double do dopracowania';
     coach_advice =
-      'Zegar na doublach wymaga płynnego przechodzenia między celami. Wypracuj stały, powtarzalny rytm złożenia (ta sama liczba kroków/oddechów) niezależnie od tego, w który double celujesz.';
-  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Zbyt długi czas na pojedynczą wartość')) {
+      'Dolne double (D3, D19, D7, D17) kuszą, żeby obniżyć łokieć. Zamiast tego koryguj wysokość rzutu pochyleniem tułowia w biodrze, trzymając łokieć na stałej wysokości.';
+  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Seryjne pudła na zewnątrz tarczy (lotki tuż obok drutu w puste pole)')) {
+    summary_title = 'Dobra forma techniczna, precyzja do dopracowania';
+    coach_advice =
+      'Seryjne pudła tuż obok drutu to sygnał, że celujesz w sam drut zamiast w środek pola double. Mierz nieco głębiej w segment, żeby zostawić sobie margines błędu.';
+  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Zacinanie się na jednym dublu (strata wielu serii na jedną wartość)')) {
     summary_title = 'Dobra forma techniczna, tempo ćwiczenia do dopracowania';
     coach_advice =
-      'Jeśli utykasz długo na jednej wartości, warto rozbić trening na krótsze, częstsze sesje tego ćwiczenia zamiast jednej długiej - da to lepszy postęp niż forsowanie tego samego double bez końca.';
-  } else if (has(data.GAME170_PROBLEM, 'Trudność z trafieniem w triple pod presją zejścia')) {
-    summary_title = 'Dobra forma techniczna, celność pod presją do dopracowania';
+      'Jeśli utykasz długo na jednej wartości, warto rozbić trening na krótsze, częstsze sesje tego ćwiczenia zamiast forsować to samo pole bez końca.';
+  } else if (has(data.DOUBLE_CLOCK_PROBLEM, 'Trudność z płynnym przestawianiem się na oche po trafieniu (zmiana kąta rzutu)')) {
+    summary_title = 'Dobra forma techniczna, płynność między celami do dopracowania';
     coach_advice =
-      'W Grze 170 presja "zejścia jak najszybciej" może pogarszać celność w triple. Nie przyspieszaj rzutu - liczy się precyzja pojedynczego rzutu, a nie tempo całej gry.';
-  } else if (has(data.GAME170_PROBLEM, 'Zbyt wolne tempo / dużo podejść')) {
+      'Zegar na doublach wymaga płynnej zmiany kąta między kolejnymi wartościami. Wypracuj stały, powtarzalny rytm złożenia niezależny od tego, w który double celujesz.';
+  } else if (has(data.GAME170_PROBLEM, 'Brak pierwszej lotki w T20 (trudność ze "wejściem" w serię potrójnym)')) {
+    summary_title = 'Dobra forma techniczna, start rundy do dopracowania';
+    coach_advice =
+      'Trudność z pierwszym trafieniem w T20 blokuje całą rundę. Zanim zaczniesz grę, wykonaj kilka rzutów rozgrzewkowych czysto w ten segment, żeby ustawić rękę.';
+  } else if (has(data.GAME170_PROBLEM, 'Asekuracyjne rzuty w duże pola (brak ryzyka rzutu w potrójne pole)')) {
     summary_title = 'Dobra forma techniczna, śmiałość rzutu do dopracowania';
     coach_advice =
-      'Duża liczba podejść może wynikać z zbyt zachowawczego celowania. Śmielej celuj w triple zamiast bezpiecznych pojedynczych pól - to jedyny sposób, żeby realnie skrócić liczbę rund.';
-  } else if (has(data.GAME170_PROBLEM, 'Problem z wyliczeniem optymalnej kombinacji')) {
+      'Zbyt zachowawcze celowanie w duże pola wydłuża grę. Śmielej celuj w triple - to jedyny sposób, żeby realnie skrócić liczbę rund w Grze 170.';
+  } else if (has(data.GAME170_PROBLEM, 'Gubienie się w optymalnej ścieżce wyjścia przy nietrafionym pierwszym potrójnym')) {
     summary_title = 'Dobra forma techniczna, taktyka do dopracowania';
     coach_advice =
-      'Zanim rzucisz pierwszą lotkę w rundzie, zaplanuj całą trójkę rzutów (np. T20-T20-T20) zamiast liczyć po każdym rzucie z osobna - to odciąży głowę podczas samego rzucania.';
-  } else if (has(data.BODY_STATE, 'Mięśnie zimne/spięte') && has(data.RELEASE_FEEL, 'Ręka spięta / zrywanie')) {
+      'Zanim rzucisz pierwszą lotkę w rundzie, zaplanuj z góry, co rzucasz przy trafieniu i co przy nietrafieniu pierwszego triple - to odciąży głowę w trakcie samego rzucania.';
+  } else if (has(data.GAME170_PROBLEM, 'Spadek skuteczności na dublu kończącym po trafieniu potrójnych')) {
+    summary_title = 'Dobra forma techniczna, wykończenie do dopracowania';
+    coach_advice =
+      'Po udanej serii w triple łatwo stracić koncentrację na samym końcu. Traktuj rzut w double kończący jako osobne zadanie, wymagające tej samej uwagi co trafienia w triple.';
+  } else if (has(data.BODY_STATE, 'Mięśnie zimne / spięte') && has(data.RELEASE_FEEL, 'Ręka spięta / zrywanie rzutu')) {
     summary_title = 'Trening zaburzony niewystarczającą rozgrzewką';
     coach_advice =
       'Zrywanie rzutu na początku treningu wynika z niegotowych mięśni. Wydłuż rozgrzewkę o 5 minut i rzucaj luźno w środek tarczy, bez celowania w konkretne sektory, aż poczujesz pełną płynność w łokciu i barku.';
-  } else if (has(data.FATIGUE, 'Ręka/bark zmęczony') || has(data.FATIGUE, 'Zmęczenie psychiczne / brak ostrości')) {
+  } else if (has(data.FATIGUE, 'Ręka / bark zmęczony') || has(data.FATIGUE, 'Zmęczenie psychiczne / spadek koncentracji')) {
     summary_title = 'Solidny trening, uważaj na przetrenowanie';
     coach_advice =
       'Gdy dłoń i bark się męczą, zaczynasz nadrabiać siłą i utrwalasz złe nawyki. Następnym razem wybierz wariant krótki (75 min) lub zrób 3-minutową przerwę na rozciąganie i wodę w połowie sesji.';
-  } else if (
-    (data.OVERALL_SCORE ?? 0) >= 8 &&
-    has(data.MECHANICS_ISSUE, 'Brak problemów / wysoka powtarzalność')
-  ) {
+  } else if ((data.OVERALL_SCORE ?? 0) >= 8 && has(data.MECHANICS_ISSUE, MECHANICS_NONE)) {
     summary_title = 'Perfekcyjna jednostka treningowa!';
     coach_advice =
-      'Doskonała jednostka treningowa! Wszystkie elementy - od płynności rzutu po kontrolę emocji - zagrały idealnie. Zapamiętaj to odczucie luzu w ręce i przenieś je na najbliższy mecz ligowy!';
+      type === 'double'
+        ? 'Świetna kontrola podwójnych! Twoja ręka pracuje płynnie, a łokieć utrzymuje stałą wysokość. Zapamiętaj ten stan czystego mechanizmu i przenieś go na symulacje meczowe!'
+        : 'Doskonała jednostka treningowa! Wszystkie elementy - od płynności rzutu po kontrolę emocji - zagrały idealnie. Zapamiętaj to odczucie luzu w ręce i przenieś je na najbliższy mecz ligowy!';
   }
 
   return {
@@ -304,5 +317,6 @@ export function generateTrainingFeedback(data: TrainingFormData): TrainingFeedba
     positives,
     negatives,
     coach_advice,
+    mainBlockDetails,
   };
 }
