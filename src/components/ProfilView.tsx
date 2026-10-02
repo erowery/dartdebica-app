@@ -180,14 +180,20 @@ function AverageTrendChart({ values }: { values: number[] }) {
   const max = Math.max(...values);
   const range = max - min || 1;
 
+  const toY = (v: number) => height - padding - ((v - min) / range) * (height - padding - topPadding);
+
   const coords = values.map((v, i) => {
     const x = padding + (i / (values.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((v - min) / range) * (height - padding - topPadding);
-    return { x, y };
+    return { x, y: toY(v) };
   });
 
-  const trendUp = values[values.length - 1] >= values[0];
+  // Średnia skumulowana (sezonu) - trend i kolor liczymy z porównania ostatniego meczu do niej,
+  // a nie do pierwszego meczu w sezonie.
+  const seasonAvg = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const lastValue = values[values.length - 1];
+  const trendUp = lastValue >= seasonAvg;
   const color = trendUp ? '#2dd6a7' : '#f87171';
+  const seasonAvgY = toY(seasonAvg);
 
   const linePoints = coords.map((c) => `${c.x},${c.y}`).join(' ');
   const areaPoints = `${padding},${height - padding} ${linePoints} ${width - padding},${height - padding}`;
@@ -199,12 +205,21 @@ function AverageTrendChart({ values }: { values: number[] }) {
           {trendUp ? '▲' : '▼'}
         </span>
         <span className="text-sm text-slate-300">
-          Od <span className="font-bold text-white">{values[0].toFixed(1)}</span> do{' '}
-          <span className="font-bold text-white">{values[values.length - 1].toFixed(1)}</span>
+          Ostatni mecz <span className="font-bold text-white">{lastValue.toFixed(1)}</span> vs średnia sezonu{' '}
+          <span className="font-bold text-white">{seasonAvg.toFixed(1)}</span>
         </span>
       </div>
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28" preserveAspectRatio="none">
         <polygon points={areaPoints} fill={color} opacity={0.12} />
+        <line
+          x1={padding}
+          y1={seasonAvgY}
+          x2={width - padding}
+          y2={seasonAvgY}
+          stroke="#64748b"
+          strokeWidth={1}
+          strokeDasharray="4 3"
+        />
         <polyline points={linePoints} fill="none" stroke={color} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
         {coords.map((c, i) => {
           const anchor = i === 0 ? 'start' : i === coords.length - 1 ? 'end' : 'middle';

@@ -59,21 +59,19 @@ export function getPhaseFields(phaseIndex: number, type: SessionType): PhaseFiel
           label: 'Która sekwencja sprawiła najwięcej problemów?',
           options:
             type === 'double'
-              ? ['D20 / D10 / D5 (Góra / Prawo)', 'D16 / D8 / D4 (Lewa strona)', 'Bullseye (Środek tarczy)', HARD_SECTOR_NONE]
-              : ['Triple 20 (Góra tarczy)', 'Triple 19 (Dół tarczy)', 'Bullseye (Środek tarczy)', HARD_SECTOR_NONE],
+              ? ['D20 / D10 / D5', 'D16 / D8 / D4', 'Bullseye', HARD_SECTOR_NONE]
+              : ['Triple 20', 'Triple 19', 'Bullseye', HARD_SECTOR_NONE],
           exclusiveOption: HARD_SECTOR_NONE,
         },
         {
           field: 'MECHANICS_ISSUE',
           label: 'Co najlepiej opisuje problem techniczny?',
           options: [
-            'Poniżej celu (spadek łokcia / zbyt szybkie opadnięcie ręki)',
-            'Powyżej celu (przepchnięcie lotki / zbyt późne otwarcie dłoni)',
-            'Ściąganie w lewo/prawo (uciekanie łokcia z osi / obrót tułowia)',
-            'Niestabilna postawa / utrata balansu na oche',
-            type === 'double'
-              ? 'Różna wysokość rzutów w jednej serii (tzw. "drabinka")'
-              : 'Ciasne rzuty, ale w pojedynczą wartość (blokowanie się na drutach T20/T19)',
+            'Poniżej celu',
+            'Powyżej celu',
+            'Ściąganie w lewo/prawo',
+            'Niestabilna postawa',
+            type === 'double' ? 'Różna wysokość rzutów w jednej serii' : 'Ciasne rzuty, ale w pojedynczą wartość',
             MECHANICS_NONE,
           ],
           exclusiveOption: MECHANICS_NONE,

@@ -12,12 +12,12 @@ export interface MainBlockResult {
 type IssueCode = 'below' | 'above' | 'sideways' | 'unstable' | 'ladder';
 
 const ISSUE_MAP: Record<string, IssueCode> = {
-  'Poniżej celu (spadek łokcia / zbyt szybkie opadnięcie ręki)': 'below',
-  'Powyżej celu (przepchnięcie lotki / zbyt późne otwarcie dłoni)': 'above',
-  'Ściąganie w lewo/prawo (uciekanie łokcia z osi / obrót tułowia)': 'sideways',
-  'Niestabilna postawa / utrata balansu na oche': 'unstable',
-  'Różna wysokość rzutów w jednej serii (tzw. "drabinka")': 'ladder',
-  'Ciasne rzuty, ale w pojedynczą wartość (blokowanie się na drutach T20/T19)': 'ladder',
+  'Poniżej celu': 'below',
+  'Powyżej celu': 'above',
+  'Ściąganie w lewo/prawo': 'sideways',
+  'Niestabilna postawa': 'unstable',
+  'Różna wysokość rzutów w jednej serii': 'ladder',
+  'Ciasne rzuty, ale w pojedynczą wartość': 'ladder',
 };
 
 interface Entry {
