@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import AdminTabele from '@/components/admin/AdminTabele';
 import AdminTydzien from '@/components/admin/AdminTydzien';
 import AdminZalegle from '@/components/admin/AdminZalegle';
+import AdminInstrukcja from '@/components/admin/AdminInstrukcja';
 
 // Ukryty panel - nic w aplikacji tu nie prowadzi. Nowe narzędzia dokładamy jako kolejne zakładki.
 const TABS = [
   { id: 'tabele', label: 'Tabele' },
   { id: 'tydzien', label: 'Mecze tygodnia' },
   { id: 'zalegle', label: 'Zaległe' },
+  { id: 'instrukcja', label: 'Instrukcja' },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -34,12 +36,12 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-ink-950 text-white px-3 py-5">
-      <nav className="mx-auto max-w-[640px] mb-5 flex gap-1 p-1 rounded-2xl bg-ink-900 border border-ink-700">
+      <nav className="mx-auto max-w-[640px] mb-5 flex gap-1 p-1 rounded-2xl bg-ink-900 border border-ink-700 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => choose(t.id)}
-            className={`flex-1 px-2 py-2.5 rounded-xl text-[13px] sm:text-sm font-bold whitespace-nowrap transition ${
+            className={`flex-1 px-2 py-2.5 rounded-xl text-[12px] sm:text-sm font-bold whitespace-nowrap transition ${
               t.id === tab ? 'bg-ink-700 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -50,6 +52,7 @@ export default function AdminPage() {
       {tab === 'tabele' && <AdminTabele />}
       {tab === 'tydzien' && <AdminTydzien />}
       {tab === 'zalegle' && <AdminZalegle />}
+      {tab === 'instrukcja' && <AdminInstrukcja />}
     </main>
   );
 }
