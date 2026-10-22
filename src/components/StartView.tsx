@@ -3,6 +3,8 @@
 import { StandingRow, MatchResultRow, FixtureRow } from '@/lib/standings';
 import { IconWarning } from '@/components/icons';
 import LeaguePositionCard from '@/components/LeaguePositionCard';
+import StartWeekCard from '@/components/StartWeekCard';
+import { LeagueConfig } from '@/config/leagues';
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'long' });
@@ -20,7 +22,11 @@ export default function StartView({
   leagueUrl,
   onGoToLiga,
   onGoToMoje,
+  league,
+  onGoToWeek,
 }: {
+  league: LeagueConfig;
+  onGoToWeek: () => void;
   playerName: string;
   leagueName: string;
   myStanding: StandingRow | null;
@@ -152,6 +158,9 @@ export default function StartView({
       >
         Zobacz tabelę
       </button>
+
+      {/* Wyróżnienia ostatniego tygodnia ligi */}
+      <StartWeekCard league={league} onOpen={onGoToWeek} />
 
       {/* Twoje sprawy - realny status sezonu */}
       <div className="p-4 bg-ink-800/50 border border-ink-700/60 rounded-2xl">

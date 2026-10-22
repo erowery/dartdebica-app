@@ -172,7 +172,32 @@ export interface TrainingFeedback {
   negatives: string[];
   coach_advice: string;
   mainBlockDetails: MainBlockResult[];
+  /** Osobne porady do bloku Trening mentalny - pokazywane zawsze, niezależnie od głównej rady */
+  mental_advice: { title: string; text: string }[];
 }
+
+const MENTAL_ADVICE: Record<string, { title: string; text: string }> = {
+  'Trudność z wyobrażeniem sytuacji meczowej': {
+    title: 'Symulacja stresu',
+    text: 'Wyobraźnia meczowa wymaga treningu jak każdy inny element. Przed symulacją przypomnij sobie konkretny mecz ligowy - rywala, wynik i salę - i rzucaj tak, jakby to była ostatnia lotka tamtego meczu. Pomaga też głośne wypowiedzenie wyniku, który zostało do zamknięcia.',
+  },
+  'Odczuwalny realny stres / skok tętna': {
+    title: 'Symulacja stresu',
+    text: 'Symulacja zadziałała - właśnie to odczucie trzeba oswajać. Przed rzutem pod presją wykonaj stały rytuał: jeden spokojny wydech, ustawienie stóp, ten sam chwyt. Powtarzalny rytuał daje ciału sygnał, że to zwykły rzut.',
+  },
+  'Pełny spokój / brak reakcji emocjonalnej': {
+    title: 'Symulacja stresu',
+    text: 'Pełny spokój to dobry znak, ale może też oznaczać, że scenariusz był za łatwy. Następnym razem podnieś stawkę: ustal sobie konkretną karę za nietrafienie (np. 10 przysiadów) albo symuluj decydującego lega przy stanie remisowym.',
+  },
+  'Nadal spięty / ciało sztywne': {
+    title: 'Ćwiczenia oddechowe',
+    text: 'Wydłuż wydech: wdech nosem na 4, wydech ustami na 6-8. Dodaj rozluźnienie barków - unieś je mocno na 3 sekundy i opuść. Powtórz 3-4 razy przed kolejną serią rzutów.',
+  },
+  'Średnie wyciszenie': {
+    title: 'Ćwiczenia oddechowe',
+    text: 'Wyciszenie było częściowe. Wydłuż ćwiczenie oddechowe o 1-2 minuty i skup się wyłącznie na liczeniu oddechów, odkładając na bok myśli o wyniku i błędach z treningu.',
+  },
+};
 
 function has(arr: string[] | undefined, value: string): boolean {
   return !!arr && arr.includes(value);
@@ -316,5 +341,8 @@ export function generateTrainingFeedback(data: TrainingFormData, type: SessionTy
     negatives,
     coach_advice,
     mainBlockDetails,
+    mental_advice: [...(data.STRESS_SIMULATION || []), ...(data.BREATHING_EFFECT || [])]
+      .map((o) => MENTAL_ADVICE[o])
+      .filter((x): x is { title: string; text: string } => !!x),
   };
 }

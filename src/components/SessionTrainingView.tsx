@@ -211,8 +211,22 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
 
         <div className="p-4 bg-gold/10 border border-gold/30 rounded-2xl mb-4">
           <p className="text-xs uppercase tracking-wider text-gold mb-2">Rada trenerska</p>
-          <p className="text-sm text-slate-200 leading-relaxed">{feedback.coach_advice}</p>
+          <p className="text-sm text-slate-200 leading-relaxed whitespace-pre-line">{feedback.coach_advice}</p>
         </div>
+
+        {(feedback.mental_advice || []).length > 0 && (
+          <div className="p-4 bg-sky-400/10 border border-sky-400/30 rounded-2xl mb-4">
+            <p className="text-xs uppercase tracking-wider text-sky-300 mb-2">Trening mentalny</p>
+            <div className="space-y-3">
+              {feedback.mental_advice.map((m, i) => (
+                <div key={i}>
+                  <p className="text-xs font-semibold text-slate-400 mb-0.5">{m.title}</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">{m.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {feedback.positives.length > 0 && (
           <div className="mb-4">

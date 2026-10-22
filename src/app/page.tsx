@@ -17,6 +17,7 @@ import ProfilView from '@/components/ProfilView';
 export default function HomePage() {
   const [whoami, setWhoami] = useState<WhoAmI | null | undefined>(undefined);
   const [view, setView] = useState<ViewId>('start');
+  const [ligaTab, setLigaTab] = useState<'table' | 'results' | 'players' | 'week'>('table');
 
   const [leagueData, setLeagueData] = useState<any>(null);
   const [liveMatches, setLiveMatches] = useState<any[]>([]);
@@ -226,8 +227,16 @@ export default function HomePage() {
               myPendingFixtures={myPendingFixtures}
               liveMatchMine={liveMatchMine}
               leagueUrl={leagueData?.url}
-              onGoToLiga={() => setView('liga')}
+              onGoToLiga={() => {
+                setLigaTab('table');
+                setView('liga');
+              }}
               onGoToMoje={() => setView('moje')}
+              league={activeLeague}
+              onGoToWeek={() => {
+                setLigaTab('week');
+                setView('liga');
+              }}
             />
           )}
 
@@ -239,6 +248,8 @@ export default function HomePage() {
               allPlayers={allPlayers}
               myTpid={whoami.tpid}
               leagueUrl={leagueData?.url}
+              league={activeLeague}
+              initialSubTab={ligaTab}
             />
           )}
 
@@ -271,7 +282,14 @@ export default function HomePage() {
         </div>
       )}
 
-      <BottomNav active={view} onChange={setView} liveCount={allLiveMatches.length} />
+      <BottomNav
+        active={view}
+        onChange={(v) => {
+          setLigaTab('table');
+          setView(v);
+        }}
+        liveCount={allLiveMatches.length}
+      />
     </main>
   );
 }

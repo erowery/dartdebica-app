@@ -2,7 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { LeagueStandingsResult, PlayerStatRow } from '@/lib/standings';
-import { IconTrophy, IconClipboardCheck, IconUsers, IconVs } from '@/components/icons';
+import { IconTrophy, IconClipboardCheck, IconUsers, IconVs, IconClock } from '@/components/icons';
+import WeekView from '@/components/WeekView';
+import { LeagueConfig } from '@/config/leagues';
 import RingProgress from '@/components/RingProgress';
 import MilestoneBarChart from '@/components/MilestoneBarChart';
 
@@ -62,7 +64,11 @@ export default function LigaView({
   allPlayers,
   myTpid,
   leagueUrl,
+  league,
+  initialSubTab = 'table',
 }: {
+  league: LeagueConfig;
+  initialSubTab?: 'table' | 'results' | 'players' | 'week';
   leagueName: string;
   standingsResult: LeagueStandingsResult | null;
   statsRows: PlayerStatRow[];
@@ -70,7 +76,7 @@ export default function LigaView({
   myTpid: string;
   leagueUrl?: string;
 }) {
-  const [subTab, setSubTab] = useState<'table' | 'results' | 'players'>('table');
+  const [subTab, setSubTab] = useState<'table' | 'results' | 'players' | 'week'>(initialSubTab);
   const [query, setQuery] = useState('');
   const [selectedTpid, setSelectedTpid] = useState<string | null>(null);
   const [h2hA, setH2hA] = useState<string>('');
@@ -113,19 +119,22 @@ export default function LigaView({
           { id: 'table', label: 'Tabela', Icon: IconTrophy },
           { id: 'results', label: 'Wyniki', Icon: IconClipboardCheck },
           { id: 'players', label: 'Zawodnicy', Icon: IconUsers },
+          { id: 'week', label: 'Tydzień', Icon: IconClock },
         ].map((t) => (
           <button
             key={t.id}
             onClick={() => setSubTab(t.id as any)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-xl font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1 py-2 px-1 rounded-xl font-semibold transition-all ${
               subTab === t.id ? 'bg-gradient-to-b from-brand to-brand-dark text-white shadow-glow' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <t.Icon className="w-4 h-4 shrink-0" />
+            <t.Icon className="w-4 h-4 shrink-0 hidden min-[400px]:block" />
             {t.label}
           </button>
         ))}
       </div>
+
+      {subTab === 'week' && <WeekView league={league} myTpid={myTpid} />}
 
       {subTab === 'table' && (
         <div>

@@ -2,122 +2,38 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
-import { fetchLeagueData, fetchLeagueSchedule, fetchMatchesInRange } from '@/lib/nakkaApi';
-import { buildFixtures, calcAverage, computeLeagueStandings, getEntryName, pairKey } from '@/lib/standings';
 import { downloadNodeAsPng } from '@/lib/snapshot';
+import {
+  LeagueWeek,
+  WeekHighlights,
+  WEEKDAYS,
+  addDays,
+  computeHighlights,
+  defaultWeekStart,
+  dm,
+  dmy,
+  hm,
+  loadLeagueWeek,
+  thursdayOf,
+} from '@/lib/weekly';
+import WeekHighlightsCard from '@/components/WeekHighlightsCard';
 
-interface WeekMatch {
-  key: string;
-  time: Date;
-  manual: boolean; // wpisany ręcznie w Nakka - bez godziny i bez średnich
-  name1: string;
-  name2: string;
-  legs1: number;
-  legs2: number;
-  avg1: number | null;
-  avg2: number | null;
-  url: string | null;
+function highlightLines(h: WeekHighlights | undefined): string[] {
+  if (!h) return [];
+  const out: string[] = [];
+  if (h.topAverage) out.push(`Najwyższa średnia: ${h.topAverage.name} ${h.topAverage.value.toFixed(2)} (vs ${h.topAverage.opponent})`);
+  if (h.bestLeg) out.push(`Best leg: ${h.bestLeg.name} ${h.bestLeg.value} lotek (vs ${h.bestLeg.opponent})`);
+  if (h.topCheckout) out.push(`Najwyższy checkout: ${h.topCheckout.name} ${h.topCheckout.value} (vs ${h.topCheckout.opponent})`);
+  return out;
 }
 
-interface LeagueWeek {
-  id: string;
-  name: string;
-  matches: WeekMatch[];
-  error: boolean;
-}
-
-const DAY = 24 * 60 * 60 * 1000;
-const WEEKDAYS = ['nd', 'pn', 'wt', 'śr', 'czw', 'pt', 'sb'];
-
-/** Początek tygodnia ligowego: czwartek 00:00 (czas lokalny) dla podanej daty */
-function thursdayOf(d: Date): Date {
-  const diff = (d.getDay() - 4 + 7) % 7;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff, 0, 0, 0, 0);
-}
-
-function addDays(d: Date, n: number): Date {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n, 0, 0, 0, 0);
-}
-
-const pad = (n: number) => String(n).padStart(2, '0');
-const dm = (d: Date) => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
-const dmy = (d: Date) => `${dm(d)}.${d.getFullYear()}`;
-const hm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-
-async function loadLeagueWeek(
-  league: (typeof LEAGUES_CONFIG)[number],
-  start: Date,
-  end: Date
-): Promise<LeagueWeek> {
-  const [archive, data, schedule] = await Promise.all([
-    fetchMatchesInRange(league.nakkaId, Math.floor(start.getTime() / 1000), Math.floor(end.getTime() / 1000)),
-    fetchLeagueData(league.nakkaId),
-    fetchLeagueSchedule(league.nakkaId),
-  ]);
-  const tournament = data?.tournament;
-  const matches: WeekMatch[] = [];
-  const seenPairs = new Set<string>();
-
-  // 1) Mecze rozegrane na żywo w Nakka - mają dokładną godzinę rozpoczęcia
-  const byTmid: Record<string, any> = {};
-  (archive || []).forEach((m: any) => {
-    if (!m?.tmid || !String(m.tmid).includes('_lg_')) return;
-    if (Number(m.endMatch) !== 1) return;
-    const prev = byTmid[m.tmid];
-    if (!prev || (m.startTime ?? 0) > (prev.startTime ?? 0)) byTmid[m.tmid] = m;
-  });
-  Object.values(byTmid).forEach((m: any) => {
-    const p1 = m.statsData?.[0] || {};
-    const p2 = m.statsData?.[1] || {};
-    if (p1.tpid && p2.tpid) seenPairs.add(pairKey(p1.tpid, p2.tpid));
-    matches.push({
-      key: m.tmid,
-      time: new Date((m.startTime ?? 0) * 1000),
-      manual: false,
-      name1: p1.tpid && tournament ? getEntryName(tournament, p1.tpid) : p1.name || 'Gracz 1',
-      name2: p2.tpid && tournament ? getEntryName(tournament, p2.tpid) : p2.name || 'Gracz 2',
-      legs1: p1.winLegs ?? 0,
-      legs2: p2.winLegs ?? 0,
-      avg1: calcAverage(p1.allScore || 0, p1.allDarts || 0),
-      avg2: calcAverage(p2.allScore || 0, p2.allDarts || 0),
-      url: `https://n01darts.com/n01/league/n01_view.html?tmid=${m.tmid}`,
-    });
-  });
-
-  // 2) Mecze wpisane ręcznie (bez średnich) - data z tytułu karty w terminarzu
-  if (tournament) {
-    const standings = computeLeagueStandings(tournament);
-    const manualPairs = new Set(
-      (standings?.results || []).filter((r) => !r.hasDetail).map((r) => pairKey(r.tpid1, r.tpid2))
-    );
-    buildFixtures(tournament, schedule as any[][] | null).forEach((f) => {
-      const pk = pairKey(f.tpid1, f.tpid2);
-      if (!f.played || !f.date || !manualPairs.has(pk) || seenPairs.has(pk)) return;
-      if (f.date < start || f.date >= end) return;
-      matches.push({
-        key: `manual_${f.divIndex}_${f.lsid}`,
-        time: f.date,
-        manual: true,
-        name1: f.name1,
-        name2: f.name2,
-        legs1: f.legs1 ?? 0,
-        legs2: f.legs2 ?? 0,
-        avg1: null,
-        avg2: null,
-        url: null,
-      });
-    });
-  }
-
-  matches.sort((a, b) => a.time.getTime() - b.time.getTime());
-  return { id: league.id, name: league.name, matches, error: archive === null && !tournament };
-}
-
-function buildPostText(start: Date, end: Date, leagues: LeagueWeek[]): string {
+function buildPostText(start: Date, end: Date, leagues: LeagueWeek[], hl: Record<string, WeekHighlights>): string {
   const lines: string[] = [`MECZE TYGODNIA ${dm(start)} – ${dmy(addDays(end, -1))}`];
   leagues.forEach((l) => {
     if (l.matches.length === 0) return;
     lines.push('', l.name);
+    const h = highlightLines(hl[l.id]);
+    if (h.length) lines.push(...h, '');
     l.matches.forEach((m) => {
       const avg = m.avg1 != null && m.avg2 != null ? ` (śr. ${m.avg1.toFixed(2)} – ${m.avg2.toFixed(2)})` : '';
       lines.push(`${m.name1} ${m.legs1}:${m.legs2} ${m.name2}${avg}`);
@@ -149,8 +65,9 @@ async function copyText(text: string): Promise<boolean> {
 
 export default function AdminTydzien() {
   // Domyślnie tydzień, w którym był "wczoraj": w czwartek pokazuje poprzedni (zakończony) tydzień
-  const [start, setStart] = useState<Date>(() => thursdayOf(new Date(Date.now() - DAY)));
+  const [start, setStart] = useState<Date>(() => defaultWeekStart());
   const [leagues, setLeagues] = useState<LeagueWeek[]>([]);
+  const [highlights, setHighlights] = useState<Record<string, WeekHighlights>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -164,10 +81,16 @@ export default function AdminTydzien() {
     let cancelled = false;
     setLoading(true);
     setCopied(false);
-    Promise.all(LEAGUES_CONFIG.map((l) => loadLeagueWeek(l, start, end))).then((res) => {
+    setHighlights({});
+    Promise.all(LEAGUES_CONFIG.map((l) => loadLeagueWeek(l, start, end))).then(async (res) => {
       if (cancelled) return;
       setLeagues(res);
       setLoading(false);
+      const hs = await Promise.all(res.map((l) => computeHighlights(l.matches)));
+      if (cancelled) return;
+      const map: Record<string, WeekHighlights> = {};
+      res.forEach((l, i) => (map[l.id] = hs[i]));
+      setHighlights(map);
     });
     return () => {
       cancelled = true;
@@ -179,7 +102,7 @@ export default function AdminTydzien() {
   const anyError = leagues.some((l) => l.error);
 
   async function handleCopy() {
-    const ok = await copyText(buildPostText(start, end, leagues));
+    const ok = await copyText(buildPostText(start, end, leagues, highlights));
     setCopied(ok);
     if (!ok) alert('Nie udało się skopiować tekstu.');
   }
@@ -254,6 +177,7 @@ export default function AdminTydzien() {
                 <h2 className="text-[15px] font-extrabold tracking-wider text-brand uppercase mb-2 px-1">
                   {l.name}
                 </h2>
+                <WeekHighlightsCard highlights={highlights[l.id]} className="mb-2" />
                 <div className="rounded-2xl border border-ink-700 bg-ink-900 overflow-hidden divide-y divide-ink-700/70">
                   {l.matches.map((m) => {
                     const w1 = m.legs1 > m.legs2;

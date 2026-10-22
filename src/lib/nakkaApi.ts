@@ -115,3 +115,28 @@ export async function fetchMatchesInRange(tdid: string, fromSec: number, toSec: 
     return all.length ? all : null;
   }
 }
+
+/**
+ * Szczegóły jednego meczu (m.in. legData z przebiegiem każdego lega).
+ * Zakończony mecz już się nie zmienia, więc trzymamy go w pamięci sesji przeglądarki.
+ */
+export async function fetchMatchDetail(mid: string): Promise<any | null> {
+  const cacheKey = `dartdebica_match_${mid}`;
+  try {
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  try {
+    const res = await fetchWithTimeout(`${NAKKA_BASE_URL}/match/get?mid=${encodeURIComponent(mid)}`, 8000);
+    if (!res || !res.ok) return null;
+    const data = await res.json();
+    if (!data || data.result !== 0) return null;
+    const match = data.match || data;
+    try {
+      if (Number(match?.endMatch) === 1) sessionStorage.setItem(cacheKey, JSON.stringify(match));
+    } catch {}
+    return match;
+  } catch {
+    return null;
+  }
+}
