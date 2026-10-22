@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LEAGUES_CONFIG, LeagueConfig } from '@/config/leagues';
 import { fetchLeagueData, fetchLeagueSchedule, fetchLiveMatches } from '@/lib/nakkaApi';
-import { buildFixtures, buildLivePairKeys, computeLeagueStandings } from '@/lib/standings';
+import { buildFixtures, buildLivePairKeys, computeLeagueStandings, pairKey } from '@/lib/standings';
 
 interface Issue {
   key: string;
@@ -47,14 +47,30 @@ async function loadSeason(league: LeagueConfig): Promise<LeagueSeason> {
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const fixtures = buildFixtures(tournament, schedule as any[][], buildLivePairKeys(live));
-  const res: LeagueSeason = { ...empty, error: false, total: fixtures.length };
+  // tylko mecze naprawdę trwające - Nakka trzyma na liście "live" także świeżo zakończone
+  const activeLive = (live || []).filter((m: any) => m.endMatch !== 1 && m.endMatch !== true);
+  const livePairs = buildLivePairKeys(activeLive);
+  const fixtures = buildFixtures(tournament, schedule as any[][], livePairs);
+  const results = computeLeagueStandings(tournament)?.results || [];
+
+  // Wszystkie mecze sezonu = z ustawień ligi (zawodnicy w grupie x liczba rund),
+  // bo terminarz potrafi zawierać więcej kart niż faktycznych meczów.
+  const robin = Number(tournament.lg_setting?.robin_count) || 1;
+  const expected = (tournament.lg_table || []).reduce((sum: number, div: string[]) => {
+    const n = (div || []).filter((t) => t && t !== 'empty').length;
+    return sum + (n * (n - 1) * robin) / 2;
+  }, 0);
+
+  const res: LeagueSeason = { ...empty, error: false };
+  res.live = activeLive.length;
+  res.played = results.filter((r) => !livePairs.has(pairKey(r.tpid1, r.tpid2))).length;
+  res.total = expected > 0 ? expected : fixtures.length;
 
   fixtures.forEach((f) => {
     const key = `${f.divIndex}_${f.lsid}`;
-    if (f.played) res.played++;
-    else if (f.isLive) res.live++;
     if (f.played || f.isLive) return;
+    // karta odwrotnej pary, która już zagrała (terminarz z kartami w obie strony) - pomijamy
+    if (robin === 1 && results.some((r) => pairKey(r.tpid1, r.tpid2) === pairKey(f.tpid1, f.tpid2))) return;
     if (f.date) {
       if (f.date.getTime() < today.getTime()) res.overdue++;
       return;
@@ -66,7 +82,7 @@ async function loadSeason(league: LeagueConfig): Promise<LeagueSeason> {
     }
   });
 
-  (computeLeagueStandings(tournament)?.results || [])
+  results
     .filter((r) => !r.hasDetail)
     .forEach((r) =>
       res.manual.push({ key: `${r.tpid1}_${r.tpid2}`, text: `${r.name1} ${r.legs1}:${r.legs2} ${r.name2}` })
@@ -133,7 +149,7 @@ export default function AdminSezon() {
       {!loading && (
         <div className="space-y-3 mb-8">
           {leagues.map((l) => {
-            const pct = l.total > 0 ? Math.round((l.played / l.total) * 100) : 0;
+            const pct = l.total > 0 ? Math.min(100, Math.round((l.played / l.total) * 100)) : 0;
             return (
               <div key={l.id} className="rounded-2xl border border-ink-700 bg-ink-900 p-4">
                 <div className="flex items-baseline justify-between mb-2">
@@ -150,7 +166,7 @@ export default function AdminSezon() {
                     <div className="grid grid-cols-4 gap-2 text-center">
                       {[
                         ['Rozegrane', `${l.played}/${l.total}`, 'text-white'],
-                        ['Zostało', String(l.total - l.played - l.live), 'text-white'],
+                        ['Zostało', String(Math.max(0, l.total - l.played - l.live)), 'text-white'],
                         ['Trwają', String(l.live), l.live > 0 ? 'text-brand' : 'text-white'],
                         ['Po terminie', String(l.overdue), l.overdue > 0 ? 'text-red-400' : 'text-white'],
                       ].map(([label, value, color]) => (

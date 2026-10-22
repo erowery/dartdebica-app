@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
 import { fetchLeagueData, fetchLeagueSchedule, fetchLiveMatches } from '@/lib/nakkaApi';
-import { buildFixtures, buildLivePairKeys } from '@/lib/standings';
+import { buildFixtures, buildLivePairKeys, computeLeagueStandings, pairKey } from '@/lib/standings';
 import { copyText } from '@/lib/clipboard';
 
 interface OverdueMatch {
@@ -49,8 +49,13 @@ async function loadLeague(league: (typeof LEAGUES_CONFIG)[number], minDays: numb
   const matches: OverdueMatch[] = [];
   let noDate = 0;
 
-  buildFixtures(tournament, schedule as any[][], buildLivePairKeys(live)).forEach((f) => {
+  const activeLive = (live || []).filter((m: any) => m.endMatch !== 1 && m.endMatch !== true);
+  const robin = Number(tournament.lg_setting?.robin_count) || 1;
+  const playedPairs = new Set((computeLeagueStandings(tournament)?.results || []).map((r) => pairKey(r.tpid1, r.tpid2)));
+  buildFixtures(tournament, schedule as any[][], buildLivePairKeys(activeLive)).forEach((f) => {
     if (f.played || f.isLive) return;
+    // terminarz z kartami w obie strony przy jednej rundzie: para już zagrała na drugiej karcie
+    if (robin === 1 && playedPairs.has(pairKey(f.tpid1, f.tpid2))) return;
     if (!f.date) {
       noDate++;
       return;
