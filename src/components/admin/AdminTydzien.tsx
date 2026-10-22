@@ -114,7 +114,6 @@ export default function AdminTydzien() {
       generateWeeklyPost(start, leagues, highlights, {
         // tabelę "po kolejce" dodajemy tylko dla bieżącego / ostatniego tygodnia (dla starszych byłaby nieaktualna)
         includeTable: start.getTime() >= defaultWeekStart().getTime(),
-        appUrl: typeof window !== 'undefined' ? window.location.host : '',
         variant,
       })
     );

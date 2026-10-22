@@ -88,7 +88,7 @@ export function generateWeeklyPost(
   start: Date,
   leagues: LeagueWeek[],
   highlights: Record<string, WeekHighlights>,
-  options: { includeTable: boolean; appUrl: string; variant?: number }
+  options: { includeTable: boolean; variant?: number }
 ): string {
   const end = addDays(start, 7);
   const range = `${dm(start)}–${dmy(addDays(end, -1))}`;
@@ -163,7 +163,6 @@ export function generateWeeklyPost(
     if (extra.length > 0) lines.push('', ...extra);
   });
 
-  lines.push('', `Pełne tabele, wyniki i statystyki: ${options.appUrl}`);
   lines.push('', '#LSDD #DartDębica #darts');
   return lines.join('\n');
 }
