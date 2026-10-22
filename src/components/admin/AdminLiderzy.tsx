@@ -29,7 +29,7 @@ function buildCategories(players: PlayerStatRow[], tournament: any): Category[] 
     .filter((p) => (bestMatchAvg[p.tpid] ?? 0) > 0)
     .sort((a, b) => bestMatchAvg[b.tpid] - bestMatchAvg[a.tpid]);
 
-  // 170+ i 180 razem
+  // 180 i 170+ razem (suma)
   const big = (p: PlayerStatRow) => p.t170 + p.t180;
   const by180 = players.filter((p) => big(p) > 0).sort((a, b) => big(b) - big(a) || b.t180 - a.t180);
   const byHO = players.filter((p) => (p.highOut ?? 0) > 0).sort((a, b) => b.highOut! - a.highOut!);
@@ -37,7 +37,7 @@ function buildCategories(players: PlayerStatRow[], tournament: any): Category[] 
 
   return [
     { id: 'avg', title: 'Najwyższa średnia meczowa', rows: take(byAvg, (p) => bestMatchAvg[p.tpid].toFixed(2)) },
-    { id: '180', title: '170+ i 180', rows: take(by180, (p) => String(big(p))) },
+    { id: '180', title: '180 / 170+', rows: take(by180, (p) => String(big(p))) },
     { id: 'ho', title: 'Najwyższy checkout', rows: take(byHO, (p) => String(p.highOut)) },
     { id: 'bl', title: 'Best leg', rows: take(byBL, (p) => String(p.bestLeg)) },
   ];
