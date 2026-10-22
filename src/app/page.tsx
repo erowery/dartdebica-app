@@ -55,6 +55,14 @@ export default function HomePage() {
       ]);
 
       if (isSubscribed) {
+        // Nowy sezon / podmieniona liga: zapamiętanego gracza nie ma już na liście zawodników
+        // -> czyścimy wybór, żeby aplikacja poprosiła o ponowny wybór ligi i nazwiska
+        const entries = data?.tournament?.entry_list;
+        if (whoami && Array.isArray(entries) && entries.length > 0 && !entries.some((e: any) => e.tpid === whoami.tpid)) {
+          clearWhoAmI();
+          setWhoami(null);
+          return;
+        }
         const activeOnly = (live || []).filter((m: any) => m.endMatch !== 1 && m.endMatch !== true);
         setLeagueData(data);
         setLiveMatches(activeOnly);
