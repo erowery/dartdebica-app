@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
 import { fetchLeagueData, fetchLeagueSchedule, fetchLiveMatches } from '@/lib/nakkaApi';
 import { buildFixtures, buildLivePairKeys } from '@/lib/standings';
+import { copyText } from '@/lib/clipboard';
 
 interface OverdueMatch {
   key: string;
@@ -83,6 +84,26 @@ export default function AdminZalegle() {
   }, [minDays, refreshKey]);
 
   const total = leagues.reduce((s, l) => s + l.matches.length, 0);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => setCopied(false), [minDays, refreshKey]);
+
+  function buildListText(): string {
+    const lines: string[] = [`ZALEGŁE MECZE (co najmniej ${minDays} dni po terminie)`];
+    leagues.forEach((l) => {
+      if (l.matches.length === 0) return;
+      lines.push('', l.name);
+      l.matches.forEach((m) => lines.push(`${m.name1} – ${m.name2}, termin ${dmy(m.date)}, ${daysLabel(m.days)} po terminie`));
+    });
+    lines.push('', 'Prosimy o pilne rozegranie lub ustalenie nowego terminu z organizatorem.');
+    return lines.join('\n');
+  }
+
+  async function handleCopy() {
+    const ok = await copyText(buildListText());
+    setCopied(ok);
+    if (!ok) alert('Nie udało się skopiować tekstu.');
+  }
 
   return (
     <div className="mx-auto max-w-[640px]">
@@ -129,6 +150,15 @@ export default function AdminZalegle() {
           </p>
         )}
       </div>
+
+      {!loading && total > 0 && (
+        <button
+          onClick={handleCopy}
+          className="w-full mb-5 px-4 py-3 rounded-xl text-base font-extrabold bg-gold text-ink-950 transition"
+        >
+          {copied ? 'Skopiowano ✓' : 'Kopiuj listę dla zawodników'}
+        </button>
+      )}
 
       {!loading &&
         leagues.map((l) => (

@@ -17,6 +17,7 @@ import {
   thursdayOf,
 } from '@/lib/weekly';
 import WeekHighlightsCard from '@/components/WeekHighlightsCard';
+import { generateWeeklyPost } from '@/lib/postText';
 
 function highlightLines(h: WeekHighlights | undefined): string[] {
   if (!h) return [];
@@ -71,6 +72,9 @@ export default function AdminTydzien() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [post, setPost] = useState('');
+  const [postCopied, setPostCopied] = useState(false);
+  const [variant, setVariant] = useState(0);
   const captureRef = useRef<HTMLDivElement>(null);
 
   const end = addDays(start, 7); // następny czwartek 00:00 = koniec środy 23:59:59
@@ -97,6 +101,31 @@ export default function AdminTydzien() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [start.getTime()]);
+
+  const highlightsReady = !loading && leagues.length > 0 && leagues.every((l) => l.matches.length === 0 || highlights[l.id]);
+
+  useEffect(() => {
+    if (!highlightsReady) {
+      setPost('');
+      return;
+    }
+    setPostCopied(false);
+    setPost(
+      generateWeeklyPost(start, leagues, highlights, {
+        // tabelę "po kolejce" dodajemy tylko dla bieżącego / ostatniego tygodnia (dla starszych byłaby nieaktualna)
+        includeTable: start.getTime() >= defaultWeekStart().getTime(),
+        appUrl: typeof window !== 'undefined' ? window.location.host : '',
+        variant,
+      })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightsReady, highlights, variant]);
+
+  async function handleCopyPost() {
+    const ok = await copyText(post);
+    setPostCopied(ok);
+    if (!ok) alert('Nie udało się skopiować tekstu.');
+  }
 
   const total = leagues.reduce((s, l) => s + l.matches.length, 0);
   const anyError = leagues.some((l) => l.error);
@@ -229,7 +258,7 @@ export default function AdminTydzien() {
           disabled={loading || total === 0}
           className="px-4 py-3.5 rounded-xl text-base font-extrabold bg-gold text-ink-950 transition disabled:opacity-40"
         >
-          {copied ? 'Skopiowano ✓' : 'Kopiuj do opisu'}
+          {copied ? 'Skopiowano ✓' : 'Kopiuj wyniki'}
         </button>
         <button
           onClick={handleImage}
@@ -242,6 +271,45 @@ export default function AdminTydzien() {
       <p className="mx-auto max-w-[640px] mt-3 px-1 text-[12px] text-slate-500">
         Kliknięcie meczu otwiera jego szczegóły w Nakka. Mecze wpisane ręcznie pokazują się według daty z terminarza.
       </p>
+
+      {/* Opis kolejki na fanpage */}
+      {!loading && total > 0 && (
+        <section className="mx-auto max-w-[640px] mt-8 px-1">
+          <div className="flex items-baseline justify-between mb-2">
+            <h2 className="text-[20px] font-extrabold text-white">Opis na fanpage</h2>
+            <button
+              onClick={() => setVariant((v) => v + 1)}
+              disabled={!post}
+              className="text-[13px] font-bold text-brand disabled:opacity-40"
+            >
+              Inne sformułowania ↻
+            </button>
+          </div>
+          <p className="text-[12px] text-slate-500 mb-2">
+            Tekst możesz poprawić bezpośrednio w ramce przed skopiowaniem.
+          </p>
+          {post ? (
+            <textarea
+              value={post}
+              onChange={(e) => {
+                setPost(e.target.value);
+                setPostCopied(false);
+              }}
+              rows={Math.min(40, post.split('\n').length + 2)}
+              className="w-full rounded-2xl bg-ink-900 border border-ink-700 p-4 text-[14px] leading-relaxed text-slate-200 focus:outline-none focus:border-brand"
+            />
+          ) : (
+            <div className="h-40 rounded-2xl bg-ink-900 border border-ink-700 animate-pulse" />
+          )}
+          <button
+            onClick={handleCopyPost}
+            disabled={!post}
+            className="w-full mt-2 px-4 py-3.5 rounded-xl text-base font-extrabold bg-gold text-ink-950 transition disabled:opacity-40"
+          >
+            {postCopied ? 'Skopiowano ✓' : 'Kopiuj opis'}
+          </button>
+        </section>
+      )}
     </div>
   );
 }

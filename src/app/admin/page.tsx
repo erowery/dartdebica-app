@@ -5,11 +5,15 @@ import AdminTabele from '@/components/admin/AdminTabele';
 import AdminTydzien from '@/components/admin/AdminTydzien';
 import AdminZalegle from '@/components/admin/AdminZalegle';
 import AdminInstrukcja from '@/components/admin/AdminInstrukcja';
+import AdminLiderzy from '@/components/admin/AdminLiderzy';
+import AdminSezon from '@/components/admin/AdminSezon';
 
 // Ukryty panel - nic w aplikacji tu nie prowadzi. Nowe narzędzia dokładamy jako kolejne zakładki.
 const TABS = [
   { id: 'tabele', label: 'Tabele' },
   { id: 'tydzien', label: 'Mecze tygodnia' },
+  { id: 'liderzy', label: 'Liderzy' },
+  { id: 'sezon', label: 'Sezon' },
   { id: 'zalegle', label: 'Zaległe' },
   { id: 'instrukcja', label: 'Instrukcja' },
 ] as const;
@@ -36,12 +40,12 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-ink-950 text-white px-3 py-5">
-      <nav className="mx-auto max-w-[640px] mb-5 flex gap-1 p-1 rounded-2xl bg-ink-900 border border-ink-700 overflow-x-auto">
+      <nav className="mx-auto max-w-[640px] mb-5 grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 rounded-2xl bg-ink-900 border border-ink-700">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => choose(t.id)}
-            className={`flex-1 px-2 py-2.5 rounded-xl text-[12px] sm:text-sm font-bold whitespace-nowrap transition ${
+            className={`px-1.5 py-2.5 rounded-xl text-[12px] sm:text-[13px] font-bold whitespace-nowrap transition ${
               t.id === tab ? 'bg-ink-700 text-white' : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -51,6 +55,8 @@ export default function AdminPage() {
       </nav>
       {tab === 'tabele' && <AdminTabele />}
       {tab === 'tydzien' && <AdminTydzien />}
+      {tab === 'liderzy' && <AdminLiderzy />}
+      {tab === 'sezon' && <AdminSezon />}
       {tab === 'zalegle' && <AdminZalegle />}
       {tab === 'instrukcja' && <AdminInstrukcja />}
     </main>

@@ -43,6 +43,8 @@ export interface WeekMatch {
   avg1: number | null;
   avg2: number | null;
   url: string | null;
+  /** klucz wyniku w tournament.lg_result ("<grupa>_<lsid>") */
+  lgKey: string | null;
   /** h (najwyższe zamknięcie) i b (best leg) z lg_result - jeśli liga je zapisuje */
   lgDetail: Record<string, { h?: number; b?: number }>;
 }
@@ -52,6 +54,8 @@ export interface LeagueWeek {
   name: string;
   matches: WeekMatch[];
   error: boolean;
+  /** pełne dane turnieju (do tabeli przed / po tygodniu) */
+  tournament: any | null;
 }
 
 export async function loadLeagueWeek(league: LeagueConfig, start: Date, end: Date): Promise<LeagueWeek> {
@@ -107,6 +111,7 @@ export async function loadLeagueWeek(league: LeagueConfig, start: Date, end: Dat
       avg1: calcAverage(p1.allScore || 0, p1.allDarts || 0),
       avg2: calcAverage(p2.allScore || 0, p2.allDarts || 0),
       url: `https://n01darts.com/n01/league/n01_view.html?tmid=${m.tmid}`,
+      lgKey: `${parts[0]}_${parts[1]}`,
       lgDetail,
     });
   });
@@ -135,13 +140,14 @@ export async function loadLeagueWeek(league: LeagueConfig, start: Date, end: Dat
         avg1: null,
         avg2: null,
         url: null,
+        lgKey: `${f.divIndex}_${f.lsid}`,
         lgDetail: {},
       });
     });
   }
 
   matches.sort((a, b) => a.time.getTime() - b.time.getTime());
-  return { id: league.id, name: league.name, matches, error: archive === null && !tournament };
+  return { id: league.id, name: league.name, matches, error: archive === null && !tournament, tournament: tournament || null };
 }
 
 // ---------- Best leg i checkout z przebiegu legów ----------
