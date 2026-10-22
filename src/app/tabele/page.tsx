@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
-import { fetchLeagueData, fetchLeagueStats, fetchLeagueSchedule } from '@/lib/nakkaApi';
+import { fetchLeagueData, fetchLeagueStats } from '@/lib/nakkaApi';
 import { computeLeagueStandings, buildPlayerStats, StandingRow, PlayerStatRow } from '@/lib/standings';
 
 interface Row extends StandingRow {
@@ -19,18 +19,19 @@ function sortRows(rows: StandingRow[]): StandingRow[] {
   );
 }
 
+// 1 = awans (zielony), 2-3 = baraż z wyższą ligą (żółty),
+// ostatni = spadek (czerwony), 2. i 3. od końca = baraż z niższą ligą (żółty)
 function barColor(idx: number, n: number): string {
-  const third = Math.max(1, Math.floor(n / 3));
-  if (idx < third) return '#2dd6a7';
-  if (idx >= n - third && n >= 4) return '#f87171';
-  return '#f2b134';
+  if (idx === 0) return '#2dd6a7';
+  if (idx === n - 1) return '#f87171';
+  if (idx <= 2 || idx >= n - 3) return '#f2b134';
+  return 'transparent';
 }
 
 export default function TabelePage() {
   const [leagueId, setLeagueId] = useState(LEAGUES_CONFIG[0].id);
   const [tournament, setTournament] = useState<any>(null);
   const [stats, setStats] = useState<Record<string, any> | null>(null);
-  const [schedule, setSchedule] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -41,16 +42,14 @@ export default function TabelePage() {
     setLoading(true);
     setError(false);
     (async () => {
-      const [d, s, sch] = await Promise.all([
+      const [d, s] = await Promise.all([
         fetchLeagueData(league.nakkaId),
         fetchLeagueStats(league.nakkaId),
-        fetchLeagueSchedule(league.nakkaId),
       ]);
       if (cancelled) return;
       if (!d) setError(true);
       setTournament(d?.tournament ?? null);
       setStats(s);
-      setSchedule(sch);
       setLoading(false);
     })();
     return () => {
@@ -66,36 +65,11 @@ export default function TabelePage() {
     const byTpid: Record<string, PlayerStatRow> = {};
     pstats.forEach((p) => (byTpid[p.tpid] = p));
 
-    // gospodarz = pierwszy zawodnik na karcie terminarza
-    const hostOf: Record<string, string> = {};
-    (schedule || []).forEach((division: any[], di: number) => {
-      (division || []).forEach((card: any) => {
-        if (card?.p?.length >= 2) hostOf[`${di}_${card.lsid}`] = card.p[0];
-      });
-    });
-
     return st.divisions.map((div, di) => {
       const rows: Row[] = sortRows(div).map((r) => ({ ...r, stat: byTpid[r.tpid] }));
-      const pos: Record<string, number> = {};
-      rows.forEach((r, i) => (pos[r.tpid] = i));
-      // cells[hostTpid][guestTpid] = {h, g}
-      const cells: Record<string, Record<string, { h: number; g: number }>> = {};
-      Object.keys(tournament.lg_result || {}).forEach((key) => {
-        if (!key.startsWith(`${di}_`)) return;
-        const m = tournament.lg_result[key];
-        const ids = Object.keys(m || {});
-        if (ids.length < 2) return;
-        let host = hostOf[key];
-        if (!host || !ids.includes(host)) host = ids[0];
-        const guest = ids.find((x) => x !== host)!;
-        const rh = m[host]?.[guest];
-        const rg = m[guest]?.[host];
-        if (!rh || !rg) return;
-        (cells[host] ||= {})[guest] = { h: rh.r ?? 0, g: rg.r ?? 0 };
-      });
-      return { di, rows, cells };
+      return { di, rows };
     });
-  }, [tournament, stats, schedule]);
+  }, [tournament, stats]);
 
   const th = 'px-2 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center whitespace-nowrap';
   const td = 'px-2 py-2 text-center text-sm tabular-nums whitespace-nowrap';
@@ -144,15 +118,12 @@ export default function TabelePage() {
                   <h2 className="text-sm font-bold text-brand mb-2">Grupa {g.di + 1}</h2>
                 )}
                 <div className="overflow-x-auto rounded-2xl border border-ink-700 bg-ink-900">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse min-w-[720px]">
                     <thead>
                       <tr className="border-b border-ink-700">
                         <th className={th}>#</th>
                         <th className={`${th} text-left`}>Gracz</th>
-                        {g.rows.map((_, i) => (
-                          <th key={i} className={`${th} min-w-[44px]`}>{i + 1}</th>
-                        ))}
-                        {['M', 'W', 'R', 'P', '+/-', 'PKT', 'Śr.', 'HO', 'BL', '100+', '140+', '170+', '180'].map((h) => (
+                        {['M', 'W', 'R', 'P', '+/-', 'PKT', 'ŚR.', 'HO', 'BL', '100+', '140+', '170+', '180'].map((h) => (
                           <th key={h} className={`${th} ${h === 'PKT' ? 'text-brand' : ''}`}>{h}</th>
                         ))}
                       </tr>
@@ -170,18 +141,6 @@ export default function TabelePage() {
                               {i + 1}
                             </td>
                             <td className={`${td} text-left font-semibold`}>{r.name}</td>
-                            {g.rows.map((c, j) => {
-                              if (i === j) return <td key={j} className="bg-ink-700/70" />;
-                              const cell = g.cells[r.tpid]?.[c.tpid];
-                              if (!cell) return <td key={j} className={`${td} text-slate-600`}>·</td>;
-                              const color =
-                                cell.h > cell.g ? 'text-brand' : cell.h < cell.g ? 'text-red-400' : 'text-gold';
-                              return (
-                                <td key={j} className={`${td} font-bold ${color}`}>
-                                  {cell.h}:{cell.g}
-                                </td>
-                              );
-                            })}
                             <td className={td}>{r.played}</td>
                             <td className={td}>{r.won}</td>
                             <td className={td}>{r.drawn}</td>
@@ -207,9 +166,19 @@ export default function TabelePage() {
             );
           })}
 
-        <p className="text-xs text-slate-500">
-          Wiersz — gospodarz, kolumna — gość. HO — najwyższe zamknięcie, BL — najlepszy leg.
-        </p>
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
+          {[
+            ['#2dd6a7', 'Awans'],
+            ['#f2b134', 'Baraż'],
+            ['#f87171', 'Spadek'],
+          ].map(([c, l]) => (
+            <span key={l} className="flex items-center gap-2">
+              <span className="inline-block w-1 h-4 rounded" style={{ background: c }} />
+              {l}
+            </span>
+          ))}
+          <span className="text-slate-500">HO — najwyższe zamknięcie · BL — najlepszy leg</span>
+        </div>
       </div>
     </main>
   );
