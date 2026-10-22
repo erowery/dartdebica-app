@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { LEAGUES_CONFIG } from '@/config/leagues';
 import { fetchLeagueData, fetchLeagueStats } from '@/lib/nakkaApi';
 import { computeLeagueStandings, buildPlayerStats, StandingRow, PlayerStatRow } from '@/lib/standings';
@@ -35,6 +35,8 @@ export default function TabelePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [view, setView] = useState<'tabela' | 'statystyki'>('tabela');
+  const [saving, setSaving] = useState(false);
+  const captureRef = useRef<HTMLDivElement>(null);
 
   const league = LEAGUES_CONFIG.find((l) => l.id === leagueId)!;
 
@@ -72,6 +74,33 @@ export default function TabelePage() {
     });
   }, [tournament, stats]);
 
+  async function downloadImage() {
+    if (!captureRef.current || saving) return;
+    setSaving(true);
+    try {
+      const { toPng } = await import('html-to-image');
+      // pixelRatio 3 = obraz ok. 1920 px szerokości - ostry na Facebooku/Instagramie
+      const dataUrl = await toPng(captureRef.current, {
+        pixelRatio: 3,
+        backgroundColor: '#000000',
+        cacheBust: true,
+        width: captureRef.current.offsetWidth,
+        height: captureRef.current.offsetHeight,
+        style: { margin: '0' },
+      });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `${league.id.toUpperCase()}_${view}_${today.replace(/\./g, '-')}.png`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch {
+      alert('Nie udało się zapisać zdjęcia. Spróbuj ponownie.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const today = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
   const th = 'px-1.5 py-3 text-[13px] font-bold uppercase tracking-wider text-slate-400 text-center whitespace-nowrap';
@@ -83,7 +112,7 @@ export default function TabelePage() {
   return (
     <main className="min-h-screen bg-ink-950 text-white px-3 py-6">
       {/* Obszar do zrzutu ekranu: od nagłówka do legendy */}
-      <div className="mx-auto max-w-[640px] bg-ink-950 bg-radial-fade rounded-3xl p-5">
+      <div ref={captureRef} className="mx-auto max-w-[640px] bg-ink-950 bg-radial-fade p-5">
         <div className="flex items-center gap-4 mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" className="h-16 w-16 object-contain" />
@@ -189,6 +218,13 @@ export default function TabelePage() {
 
       {/* Sterowanie - poniżej obszaru zrzutu */}
       <div className="mx-auto max-w-[640px] mt-6 space-y-3 px-1">
+        <button
+          onClick={downloadImage}
+          disabled={loading || saving || groups.length === 0}
+          className="w-full px-4 py-3.5 rounded-xl text-base font-extrabold bg-brand text-ink-950 shadow-glow transition disabled:opacity-40"
+        >
+          {saving ? 'Tworzę zdjęcie…' : 'Pobierz zdjęcie'}
+        </button>
         <div className="flex gap-2">
           {(['tabela', 'statystyki'] as const).map((v) => (
             <button
