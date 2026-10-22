@@ -92,8 +92,11 @@ export default function AdminTabele() {
 
   const today = new Date().toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  const th = 'px-1.5 py-3 text-[13px] font-bold uppercase tracking-wider text-slate-400 text-center whitespace-nowrap';
-  const td = 'px-1.5 py-2.5 text-center text-[17px] tabular-nums whitespace-nowrap';
+  // na telefonie mniejsza czcionka i odstępy, żeby wszystkie kolumny się zmieściły
+  // (widok Statystyki ma 9 kolumn, więc na telefonie jest jeszcze ciaśniejszy)
+  const dense = view === 'statystyki';
+  const th = `${dense ? 'px-[2px] text-[10px] tracking-normal' : 'px-1 text-[11px] tracking-wide'} sm:px-1.5 py-2.5 sm:py-3 sm:text-[13px] sm:tracking-wider font-bold uppercase text-slate-400 whitespace-nowrap`;
+  const td = `${dense ? 'px-[2px] text-[13px]' : 'px-1 text-[14px]'} sm:px-1.5 py-2 sm:py-2.5 sm:text-[17px] tabular-nums whitespace-nowrap`;
 
   const tabelaCols = ['M', 'W', 'R', 'P', '+/-', 'PKT'];
   const statCols = ['ŚR.', 'HO', 'BL', '100+', '140+', '170+', '180'];
@@ -101,12 +104,12 @@ export default function AdminTabele() {
   return (
     <div>
       {/* Obszar do zrzutu ekranu: od nagłówka do legendy */}
-      <div ref={captureRef} className="mx-auto max-w-[640px] bg-ink-950 bg-radial-fade p-5">
+      <div ref={captureRef} className="mx-auto max-w-[640px] bg-ink-950 bg-radial-fade p-2 sm:p-5">
         <div className="flex items-center gap-4 mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" className="h-16 w-16 object-contain" />
+          <img src="/logo.png" alt="" className="h-12 w-12 sm:h-16 sm:w-16 object-contain" />
           <div>
-            <h1 className="text-[28px] leading-tight font-extrabold tracking-wide">
+            <h1 className="text-[22px] sm:text-[28px] leading-tight font-extrabold tracking-wide">
               {league.name.toUpperCase()}
             </h1>
             <p className="text-[15px] text-slate-400">
@@ -132,10 +135,10 @@ export default function AdminTabele() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b border-ink-700">
-                        <th className={th}>#</th>
+                        <th className={`${th} text-center`}>#</th>
                         <th className={`${th} text-left`}>Gracz</th>
                         {(view === 'tabela' ? tabelaCols : statCols).map((h) => (
-                          <th key={h} className={`${th} ${h === 'PKT' || h === 'ŚR.' ? 'text-brand' : ''}`}>{h}</th>
+                          <th key={h} className={`${th} text-center ${h === 'PKT' || h === 'ŚR.' ? 'text-brand' : ''}`}>{h}</th>
                         ))}
                       </tr>
                     </thead>
@@ -146,34 +149,34 @@ export default function AdminTabele() {
                         return (
                           <tr key={r.tpid} className="border-b border-ink-800 last:border-0 even:bg-white/[0.02]">
                             <td
-                              className={`${td} font-bold w-12`}
+                              className={`${td} text-center font-bold w-8 sm:w-12`}
                               style={{ boxShadow: `inset 5px 0 0 ${barColor(i, n)}` }}
                             >
                               {i + 1}
                             </td>
-                            <td className={`${td} text-left font-semibold`}>{r.name}</td>
+                            <td className={`${td} text-left font-semibold !whitespace-normal leading-tight`}>{r.name}</td>
                             {view === 'tabela' ? (
                               <>
-                                <td className={td}>{r.played}</td>
-                                <td className={td}>{r.won}</td>
-                                <td className={td}>{r.drawn}</td>
-                                <td className={td}>{r.lost}</td>
-                                <td className={`${td} ${diff > 0 ? 'text-brand' : diff < 0 ? 'text-red-400' : ''}`}>
+                                <td className={`${td} text-center`}>{r.played}</td>
+                                <td className={`${td} text-center`}>{r.won}</td>
+                                <td className={`${td} text-center`}>{r.drawn}</td>
+                                <td className={`${td} text-center`}>{r.lost}</td>
+                                <td className={`${td} text-center ${diff > 0 ? 'text-brand' : diff < 0 ? 'text-red-400' : ''}`}>
                                   {diff > 0 ? `+${diff}` : diff}
                                 </td>
-                                <td className={`${td} text-[19px] font-extrabold text-brand`}>{r.points}</td>
+                                <td className={`${td} text-center font-extrabold text-brand`}>{r.points}</td>
                               </>
                             ) : (
                               <>
-                                <td className={`${td} font-bold text-brand`}>
+                                <td className={`${td} text-center font-bold text-brand`}>
                                   {s?.average != null ? s.average.toFixed(2) : '–'}
                                 </td>
-                                <td className={td}>{s?.highOut || '–'}</td>
-                                <td className={td}>{s?.bestLeg || '–'}</td>
-                                <td className={td}>{s?.t100 ?? 0}</td>
-                                <td className={td}>{s?.t140 ?? 0}</td>
-                                <td className={td}>{s?.t170 ?? 0}</td>
-                                <td className={`${td} ${s?.t180 ? 'font-bold text-gold' : ''}`}>{s?.t180 ?? 0}</td>
+                                <td className={`${td} text-center`}>{s?.highOut || '–'}</td>
+                                <td className={`${td} text-center`}>{s?.bestLeg || '–'}</td>
+                                <td className={`${td} text-center`}>{s?.t100 ?? 0}</td>
+                                <td className={`${td} text-center`}>{s?.t140 ?? 0}</td>
+                                <td className={`${td} text-center`}>{s?.t170 ?? 0}</td>
+                                <td className={`${td} text-center ${s?.t180 ? 'font-bold text-gold' : ''}`}>{s?.t180 ?? 0}</td>
                               </>
                             )}
                           </tr>

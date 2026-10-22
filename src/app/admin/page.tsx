@@ -39,7 +39,7 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-ink-950 text-white px-3 py-5">
+    <main className="min-h-screen bg-ink-950 text-white px-2 sm:px-3 py-5">
       <nav className="mx-auto max-w-[640px] mb-5 grid grid-cols-3 sm:grid-cols-6 gap-1 p-1 rounded-2xl bg-ink-900 border border-ink-700">
         {TABS.map((t) => (
           <button
