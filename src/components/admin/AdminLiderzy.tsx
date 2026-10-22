@@ -43,7 +43,8 @@ function buildCategories(players: PlayerStatRow[], tournament: any): Category[] 
   ];
 }
 
-const RANK_COLORS = ['text-gold', 'text-slate-300', 'text-amber-600'];
+// obwódka kółka z numerem miejsca: złoto, srebro, brąz, potem szara
+const RANK_RING = ['#f2b134', '#cbd5e1', '#d97706'];
 
 export default function AdminLiderzy() {
   const [leagueId, setLeagueId] = useState(LEAGUES_CONFIG[0].id);
@@ -120,8 +121,11 @@ export default function AdminLiderzy() {
                 ) : (
                   <ol className="space-y-1.5">
                     {c.rows.map((r, i) => (
-                      <li key={i} className="flex items-baseline gap-2">
-                        <span className={`w-4 shrink-0 text-[14px] font-extrabold tabular-nums ${RANK_COLORS[i] || 'text-slate-500'}`}>
+                      <li key={i} className="flex items-baseline gap-2.5">
+                        <span
+                          className="w-5 h-5 shrink-0 self-center rounded-full bg-ink-800 flex items-center justify-center text-[11px] font-semibold text-slate-400 tabular-nums"
+                          style={{ border: `1.5px solid ${RANK_RING[i] || '#334155'}` }}
+                        >
                           {i + 1}
                         </span>
                         <span className={`flex-1 min-w-0 break-words text-[14px] leading-snug ${i === 0 ? 'font-bold text-white' : 'text-slate-300'}`}>
