@@ -88,3 +88,30 @@ export async function fetchLeagueSchedule(tdid: string): Promise<any[] | null> {
     return null;
   }
 }
+
+/**
+ * Mecze z archiwum Nakka rozpoczęte w podanym przedziale czasu
+ * (fromSec włącznie, toSec wyłącznie; czas UNIX w sekundach).
+ * Archiwum trzyma każdy mecz rozgrywany na żywo w Nakka - mecze wpisane ręcznie
+ * przez organizatora się tu nie pojawiają.
+ */
+export async function fetchMatchesInRange(tdid: string, fromSec: number, toSec: number): Promise<any[] | null> {
+  const all: any[] = [];
+  try {
+    for (let skip = 0; skip < 500; skip += 100) {
+      const res = await fetchWithTimeout(
+        `${NAKKA_BASE_URL}/match/list?tdid=${tdid}&startTime__gte=${fromSec}&startTime__lt=${toSec}&count=100&skip=${skip}`,
+        8000
+      );
+      if (!res || !res.ok) return skip === 0 ? null : all;
+      const data = await res.json();
+      if (!data || data.result !== 0) return skip === 0 ? null : all;
+      const list = data.list || [];
+      all.push(...list);
+      if (list.length < 100) break;
+    }
+    return all;
+  } catch {
+    return all.length ? all : null;
+  }
+}
