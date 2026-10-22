@@ -195,7 +195,8 @@ export const CHALLENGE_MINUTES = 10;
 export function suggestTierId(average: number | null | undefined): TierId {
   if (!average || average <= 0) return 'adept';
   const found = PYRAMID_TIERS.find((t) => average >= t.minAvg && average < t.maxAvg);
-  return found?.id ?? 'mistrz';
+  if (found) return found.id;
+  return average < PYRAMID_TIERS[0].minAvg ? 'adept' : 'mistrz';
 }
 
 export interface PyramidProgress {

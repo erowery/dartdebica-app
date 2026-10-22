@@ -193,7 +193,7 @@ export default function SessionTrainingView({ type, myTpid }: { type: SessionTyp
               {recentLog.map((e, idx) => (
                 <div key={idx} className="flex items-center justify-between text-sm bg-ink-800/40 border border-ink-700/60 rounded-xl px-4 py-2.5">
                   <span className="text-white">{e.date} · {e.totalMinutes} min</span>
-                  <span className="font-bold text-gold">{e.feedback.score}/10</span>
+                  <span className="font-bold text-gold">{e.feedback?.score ?? '–'}/10</span>
                 </div>
               ))}
             </div>
