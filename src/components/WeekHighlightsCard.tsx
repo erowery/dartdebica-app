@@ -42,7 +42,7 @@ export default function WeekHighlightsCard({
   return (
     <div className={`grid grid-cols-3 gap-2 ${className}`}>
       <Tile label="Najwyższa średnia" h={highlights.topAverage} digits={2} />
-      <Tile label="Best leg" h={highlights.bestLeg} unit="lotek" />
+      <Tile label="Best leg" h={highlights.bestLeg} />
       <Tile label="Najwyższy checkout" h={highlights.topCheckout} />
     </div>
   );

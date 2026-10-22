@@ -22,7 +22,7 @@ function highlightLines(h: WeekHighlights | undefined): string[] {
   if (!h) return [];
   const out: string[] = [];
   if (h.topAverage) out.push(`Najwyższa średnia: ${h.topAverage.name} ${h.topAverage.value.toFixed(2)} (vs ${h.topAverage.opponent})`);
-  if (h.bestLeg) out.push(`Best leg: ${h.bestLeg.name} ${h.bestLeg.value} lotek (vs ${h.bestLeg.opponent})`);
+  if (h.bestLeg) out.push(`Best leg: ${h.bestLeg.name} ${h.bestLeg.value} (vs ${h.bestLeg.opponent})`);
   if (h.topCheckout) out.push(`Najwyższy checkout: ${h.topCheckout.name} ${h.topCheckout.value} (vs ${h.topCheckout.opponent})`);
   return out;
 }
