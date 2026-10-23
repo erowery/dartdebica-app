@@ -59,6 +59,28 @@ Kolejność linijek to kolejność lig w aplikacji: pierwsza linijka to najwyżs
 2. W okienku kliknij ponownie **Commit changes**.
 3. Odczekaj 1–2 minuty, aż Vercel zbuduje nową wersję. Potem odśwież aplikację.
 
+## Po zakończeniu sezonu: archiwum (zakładka Historia)
+
+Zanim podmienisz ligi na nowy sezon, dopisz stare do archiwum. Wtedy w aplikacji, w zakładce **Liga → Historia**, zostaną końcowe tabele i mistrzowie.
+
+1. W tym samym pliku `src/config/leagues.ts` znajdź na dole listę **ARCHIVE_SEASONS**.
+2. Dopisz zakończony sezon na górze listy, np.:
+
+```
+{
+  season: '2025/2026',
+  leagues: [
+    { name: 'I Liga LSDD', nakkaId: 't_iKfq_6965' },
+    { name: 'II Liga LSDD', nakkaId: 't_pjgk_4087' },
+  ],
+},
+```
+
+3. Użyj **starych** identyfikatorów z Nakka, czyli tych z kończącego się sezonu.
+4. Dopiero potem podmień identyfikatory w głównej liście lig na nowe i zapisz zmiany jak w kroku 4.
+
+Zakładka Historia pojawi się sama, gdy w archiwum będzie choć jeden sezon.
+
 ## Na co uważać
 
 - Każda linijka zaczyna się od **`{`** i kończy na **`},`**, z przecinkiem na końcu.
