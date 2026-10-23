@@ -3,28 +3,41 @@
 import { useEffect, useState } from 'react';
 import { Achievement, Tier, getNewAchievements, markAchievementsSeen } from '@/lib/achievements';
 
-const TIER: Record<Tier, { ring: string; text: string; bg: string; label: string }> = {
-  bronze: { ring: '#d97706', text: 'text-amber-500', bg: 'rgba(217,119,6,0.14)', label: 'brąz' },
-  silver: { ring: '#cbd5e1', text: 'text-slate-200', bg: 'rgba(203,213,225,0.12)', label: 'srebro' },
-  gold: { ring: '#f2b134', text: 'text-gold', bg: 'rgba(242,177,52,0.16)', label: 'złoto' },
+const TIER: Record<Tier, { fill: string; ring: string; ink: string; label: string }> = {
+  bronze: { fill: 'linear-gradient(160deg, #f59e0b, #b45309)', ring: '#f59e0b', ink: '#1a0f02', label: 'brąz' },
+  silver: { fill: 'linear-gradient(160deg, #f1f5f9, #94a3b8)', ring: '#e2e8f0', ink: '#0f172a', label: 'srebro' },
+  gold: { fill: 'linear-gradient(160deg, #fde68a, #f2b134)', ring: '#f2b134', ink: '#1f1400', label: 'złoto' },
 };
 
 export function Badge({ a, size = 52 }: { a: Achievement; size?: number }) {
   const t = TIER[a.tier];
   const font = a.symbol.length >= 4 ? 13 : a.symbol.length === 3 ? 15 : 19;
+  if (!a.unlocked) {
+    // niezdobyte: ciemne kółko, przerywana szara obwódka, przygaszony znak
+    return (
+      <div
+        className="shrink-0 rounded-full flex items-center justify-center font-extrabold text-slate-600"
+        style={{ width: size, height: size, fontSize: font, border: '2px dashed #334155', background: '#0a0a0c' }}
+      >
+        {a.symbol}
+      </div>
+    );
+  }
+  // zdobyte: pełne wypełnienie w kolorze medalu + znaczek ✓
   return (
-    <div
-      className={`shrink-0 rounded-full flex items-center justify-center font-extrabold ${a.unlocked ? t.text : 'text-slate-600'}`}
-      style={{
-        width: size,
-        height: size,
-        fontSize: font,
-        border: `2.5px solid ${a.unlocked ? t.ring : '#1e1f24'}`,
-        background: a.unlocked ? t.bg : '#0a0a0c',
-        boxShadow: a.unlocked ? `0 0 18px -6px ${t.ring}` : 'none',
-      }}
-    >
-      {a.symbol}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <div
+        className="w-full h-full rounded-full flex items-center justify-center font-extrabold"
+        style={{ fontSize: font, background: t.fill, color: t.ink, boxShadow: `0 0 18px -4px ${t.ring}` }}
+      >
+        {a.symbol}
+      </div>
+      <span
+        className="absolute -right-0.5 -bottom-0.5 w-[18px] h-[18px] rounded-full bg-brand text-ink-950 text-[11px] font-black flex items-center justify-center"
+        style={{ border: '2px solid #000' }}
+      >
+        ✓
+      </span>
     </div>
   );
 }

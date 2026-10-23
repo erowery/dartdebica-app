@@ -25,9 +25,11 @@ export default function ProfilView({
   myResults,
   myStats,
   achievements,
+  remainingMatches,
   onReset,
 }: {
   achievements: Achievement[];
+  remainingMatches: number;
   playerName: string;
   leagueName: string;
   myStanding: StandingRow | null;
@@ -74,6 +76,7 @@ export default function ProfilView({
         myStats={myStats}
         myResults={myResults}
         achievements={achievements}
+        remainingMatches={remainingMatches}
       />
 
       <AchievementsSection list={achievements} />

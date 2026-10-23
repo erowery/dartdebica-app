@@ -37,7 +37,9 @@ export default function SeasonSummary({
   myStats,
   myResults,
   achievements,
+  remainingMatches,
 }: {
+  remainingMatches: number;
   playerName: string;
   leagueName: string;
   myTpid: string;
@@ -80,6 +82,31 @@ export default function SeasonSummary({
     } finally {
       setSaving(false);
     }
+  }
+
+  if (remainingMatches > 0 || played === 0) {
+    const total = played + remainingMatches;
+    return (
+      <div className="w-full p-4 rounded-2xl border border-ink-700 bg-ink-800/40 flex items-center gap-3">
+        <span className="shrink-0 w-11 h-11 rounded-xl bg-ink-900 border border-ink-700 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="#64748b" strokeWidth="1.8" strokeLinecap="round">
+            <rect x="5" y="11" width="14" height="9" rx="2" />
+            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+          </svg>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-bold text-slate-300">Podsumowanie sezonu</span>
+          <span className="block text-[12.5px] text-slate-400">
+            Odblokuje się po rozegraniu wszystkich meczów ({played} z {total})
+          </span>
+          {total > 0 && (
+            <span className="block h-1.5 mt-2 rounded-full bg-ink-900 overflow-hidden">
+              <span className="block h-full bg-gold" style={{ width: `${(played / total) * 100}%` }} />
+            </span>
+          )}
+        </span>
+      </div>
+    );
   }
 
   if (!open) {

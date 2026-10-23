@@ -322,6 +322,7 @@ export default function HomePage() {
               myResults={myResults}
               myStats={myStats}
               achievements={achievements}
+              remainingMatches={myPendingFixtures.length}
               onReset={handleReset}
             />
           )}
